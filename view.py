@@ -123,6 +123,15 @@ def keyboard(key, x, y):
         rotationParam.animateTo(rotation*90, animationLength)
         animToFitImage(animationLength)
         startAnimation()
+    elif key == 'f' or key == 'F':
+        glutFullScreen()
+
+        # TODO: wtf game mode
+        #if glutGameModeGet(GLUT_GAME_MODE_ACTIVE):
+        #    glutLeaveGameMode()
+        #else:
+        #    glutEnterGameMode()
+        #setAllCallbacks()
 
 def jumpToFitImage():
     wid,hei = window_width, window_height
@@ -182,6 +191,16 @@ def reshape(w,h):
     print "reshape(%d,%d)" % (w,h)
     initializeDisplay(w,h)
 
+def setAllCallbacks():
+    glutDisplayFunc(display)
+    glutKeyboardFunc(keyboard)
+    glutSpecialFunc(specialKeyboard)
+    glutReshapeFunc(reshape)
+    glutMotionFunc(mouseMove)
+    glutPassiveMotionFunc(mouseMove)
+
+    startAnimation()
+
 def main():
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE)
@@ -189,12 +208,7 @@ def main():
     windowContext = glutCreateWindow('comicviewer')
     glutSetWindow(windowContext)
 
-    glutDisplayFunc(display)
-    glutKeyboardFunc(keyboard)
-    glutSpecialFunc(specialKeyboard)
-    glutReshapeFunc(reshape)
-    glutMotionFunc(mouseMove)
-    glutPassiveMotionFunc(mouseMove)
+    setAllCallbacks()
 
     print "imagelister"
     files, delete_items = imagelister.findAndExtractFiles(sys.argv[1:])
