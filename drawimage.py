@@ -3,10 +3,11 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
 import pygame
+import time
 
 class DrawImage:
     def __init__(self, path, initializeGL=True):
-        print "DrawImage created: " + path
+        startTime = time.time()
 
         self.imagePath = path
 
@@ -18,6 +19,9 @@ class DrawImage:
 
         self.texture = None
         self.displayList = None
+
+        endTime = time.time()
+        print "DrawImage created in %.2f seconds: %s" % (endTime-startTime, path)
 
         if initializeGL:
             self.initializeForGL()
