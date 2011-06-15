@@ -1,27 +1,33 @@
+import math
+
 class AnimatedParameter:
     def __init__(self, val):
         self.jump(val)
 
     def step(self, size):
-        if self.d == 0:
+        if self.pos >= 1:
+            self.jump(self.to)
             return False
-        self.at += self.d * size
-        if self.d < 0 and self.at < self.to:
+
+        self.pos += size/self.time
+
+        if self.pos >= 1:
             self.jump(self.to)
-        elif self.d > 0 and self.at > self.to:
-            self.jump(self.to)
+            return False
+
+        part = (self.pos + 1 - math.cos(self.pos*math.pi))/3
+        self.at = self.to*part + self.fro*(1-part)
+
         return True
 
     def jump(self, new):
-        self.to = self.at = float(new)
-        self.d = 0.0
+        self.fro = self.to = self.at = float(new)
 
     def animateTo(self, to, time):
+        self.fro = self.at
         self.to = to
-        self.d = float(to - self.at) / time
-
-    def draw(self):
-        pass
+        self.pos = 0
+        self.time = time
 
 class AnimatedImage:
     def __init__(self, drawimage):

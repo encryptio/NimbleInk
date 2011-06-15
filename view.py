@@ -12,7 +12,7 @@ import imagelister
 
 from animator import *
 
-animationLength = 1.0/8
+animationLength = 1.0/5
 
 window_width  = 300
 window_height = 300
@@ -78,8 +78,6 @@ def stopAnimation():
     glutIdleFunc(None)
 
 def display():
-    print "display()"
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     global window_width, window_height
@@ -95,7 +93,6 @@ def display():
 
     glPopMatrix()
 
-    print "  -> swap"
     glutSwapBuffers()
 
 def keyboard(key, x, y):
