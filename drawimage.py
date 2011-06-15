@@ -34,7 +34,6 @@ class DrawImage:
 
     def initializeForGL(self):
         if not self.glInitialized:
-            print "initializing gl for " + self.imagePath
             self.glInitialized = True
             self.createTexture()
             self.createDisplayList()
@@ -98,7 +97,6 @@ class DrawImage:
         self.draw(x0 + (w-ew)/2, y0 + (h-eh)/2, ew, eh)
 
     def __del__(self):
-        print "DrawImage destroyed: " + self.imagePath
         self.destroyTexture()
         self.destroyDisplayList()
 
