@@ -1,12 +1,15 @@
 from drawimage import DrawImage
 
 import threading
+import shutil
 
 class ImageZipper:
-    def __init__(self, paths):
+    def __init__(self, paths, deleteOnDel=[]):
         self.backward = []
         self.now = paths[0]
         self.forward = paths[1:]
+
+        self.deleteOnDel = deleteOnDel
         
         self.backwardImage = None
         self.nowImage = DrawImage(self.now)
@@ -66,4 +69,9 @@ class ImageZipper:
 
         # wait for the thread to obtain the loadLock
         threadStarted.acquire()
-    
+
+    def __del__(self):
+        for f in self.deleteOnDel:
+            print "removing temporary directory %s" % f
+            shutil.rmtree(f)
+

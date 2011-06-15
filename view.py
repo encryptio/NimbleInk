@@ -201,7 +201,7 @@ def main():
 
     print "load zipper"
     global zipper, nowAnimImage
-    zipper = ImageZipper(files)
+    zipper = ImageZipper(files, delete_items)
     nowAnimImage = AnimatedImage(zipper.nowImage)
     jumpToFitImage()
 
