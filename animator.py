@@ -22,6 +22,8 @@ class AnimatedParameter:
 
     def jump(self, new):
         self.fro = self.to = self.at = float(new)
+        self.pos = 0
+        self.time = 0.01
 
     def animateTo(self, to, time):
         self.fro = self.at
