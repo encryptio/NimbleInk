@@ -13,6 +13,8 @@ import imagelister
 from animator import *
 
 animationLength = 1.0/5
+mouseCursorTimerFuzziness = 0.05
+mouseCursorTimerLength    = 0.75
 
 window_width  = 300
 window_height = 300
@@ -137,6 +139,24 @@ def specialKeyboard(key, x, y):
             nowAnimImage = AnimatedImage(zipper.nowImage)
             jumpToFitImage()
             glutPostRedisplay()
+
+currentMoveTimer = 0
+lastTimerSetTime = 0
+def mouseMove(x,y):
+    print "mouseMove(%d,%d)" % (x, y)
+    glutSetCursor(GLUT_CURSOR_INHERIT)
+    
+    global currentMoveTimer, lastTimerSetTime
+    if time.time() - lastTimerSetTime > mouseCursorTimerFuzziness:
+        currentMoveTimer += 1
+        lastTimerSetTime = time.time()
+        glutTimerFunc(int(mouseCursorTimerLength*1000), mouseTimeout, currentMoveTimer)
+
+def mouseTimeout(value):
+    print "mouseTimeout(%d)" % value
+    if value == currentMoveTimer:
+        glutSetCursor(GLUT_CURSOR_NONE)
+
 def reshape(w,h):
     print "reshape(%d,%d)" % (w,h)
     initializeDisplay(w,h)
@@ -152,6 +172,8 @@ def main():
     glutKeyboardFunc(keyboard)
     glutSpecialFunc(specialKeyboard)
     glutReshapeFunc(reshape)
+    glutMotionFunc(mouseMove)
+    glutPassiveMotionFunc(mouseMove)
 
     print "imagelister"
     files, delete_items = imagelister.findAndExtractFiles(sys.argv[1:])
@@ -162,7 +184,7 @@ def main():
     nowAnimImage = AnimatedImage(zipper.nowImage)
     jumpToFitImage()
 
-    glutSetCursor(GLUT_CURSOR_NONE)
+    mouseMove(0,0)
 
     print "mainloop"
     glutMainLoop()
