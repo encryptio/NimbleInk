@@ -162,6 +162,8 @@ def main():
     nowAnimImage = AnimatedImage(zipper.nowImage)
     jumpToFitImage()
 
+    glutSetCursor(GLUT_CURSOR_NONE)
+
     print "mainloop"
     glutMainLoop()
 
