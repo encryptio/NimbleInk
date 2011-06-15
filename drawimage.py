@@ -16,7 +16,10 @@ class DrawImage:
         try:
             self.textureData = img.tostring("raw", "RGBA", 0, -1)
         except SystemError:
-            self.textureData = img.tostring("raw", "RGBX", 0, -1)
+            try:
+                self.textureData = img.tostring("raw", "RGBX", 0, -1)
+            except SystemError:
+                self.textureData = img.convert("RGBA").transpose(Image.FLIP_TOP_BOTTOM).tostring()
 
         self.glInitialized = False
 
