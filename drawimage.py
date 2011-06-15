@@ -11,6 +11,9 @@ class DrawImage:
         self.imagePath = path
 
         self.textureSurface = pygame.image.load(path)
+        self.width = self.textureSurface.get_width()
+        self.height = self.textureSurface.get_height()
+
         self.glInitialized = False
 
         self.texture = None
@@ -46,9 +49,6 @@ class DrawImage:
 
     def createTexture(self):
         textureData = pygame.image.tostring(self.textureSurface, "RGBA", 1)
-
-        self.width = self.textureSurface.get_width()
-        self.height = self.textureSurface.get_height()
 
         self.textureSurface = None
 
