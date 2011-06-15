@@ -25,10 +25,12 @@ last_animate_time = 0
 rotation = 0
 rotationParam = AnimatedParameter(0)
 nowAnimImage = None
+arrowBounceAnim = None
+arrowBounceSide = 'left'
 
 def initializeDisplay(w,h):
     glClearColor(0.0, 0.0, 0.0, 1.0)
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT)
 
     # world mapping is pixel mapping
     glMatrixMode(GL_PROJECTION)
