@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import pygame
+import Image
 import time
 
 class DrawImage:
@@ -11,9 +11,14 @@ class DrawImage:
 
         self.imagePath = path
 
-        self.textureSurface = pygame.image.load(path)
-        self.width = self.textureSurface.get_width()
-        self.height = self.textureSurface.get_height()
+        # TODO: about 4x slower than pygame image loading
+        img = Image.open(path)
+        self.width = img.size[0]
+        self.height = img.size[1]
+        try:
+            self.textureData = img.tostring("raw", "RGBA", 0, -1)
+        except SystemError:
+            self.textureData = img.tostring("raw", "RGBX", 0, -1)
 
         self.glInitialized = False
 
@@ -52,15 +57,13 @@ class DrawImage:
             glDeleteLists(self.displayList, 1)
 
     def createTexture(self):
-        textureData = pygame.image.tostring(self.textureSurface, "RGBA", 1)
-
-        self.textureSurface = None
-
         self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.textureData)
+
+        self.textureData = None
 
     def destroyTexture(self):
         if not self.texture is None:
