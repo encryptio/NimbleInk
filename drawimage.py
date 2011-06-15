@@ -30,6 +30,7 @@ class DrawImage:
         self.displayList = glGenLists(1)
 
         glNewList(self.displayList, GL_COMPILE)
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         glBegin(GL_QUADS)
         glTexCoord2f(0, 0); glVertex2f(0, 0) # bottom left
