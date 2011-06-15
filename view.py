@@ -17,6 +17,8 @@ arrowBounceAnimationLength = 1.0/3
 mouseCursorTimerFuzziness = 0.05
 mouseCursorTimerLength    = 0.75
 
+frameWait = 1/80
+
 window_width  = 300
 window_height = 300
 
@@ -53,6 +55,7 @@ def initializeDisplay(w,h):
     jumpToFitImage()
 
 def animate():
+    time.sleep(frameWait)
     global last_animate_time
     this_animate_time = time.time()
     delta = this_animate_time - last_animate_time
