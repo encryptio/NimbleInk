@@ -13,6 +13,7 @@ import imagelister
 from animator import *
 
 animationLength = 1.0/5
+arrowBounceAnimationLength = 1.0/3
 mouseCursorTimerFuzziness = 0.05
 mouseCursorTimerLength    = 0.75
 
@@ -58,6 +59,8 @@ def animate():
     changed = False
     changed |= rotationParam.step(delta)
     changed |= nowAnimImage.step(delta)
+    if arrowBounceAnim:
+        changed |= arrowBounceAnim.step(delta)
 
     if not changed:
         stopAnimation()
@@ -95,6 +98,12 @@ def display():
 
     glPopMatrix()
 
+    if arrowBounceAnim:
+        if arrowBounceSide == 'left':
+            arrowBounceAnim.draw(100,hei/2, 150,150)
+        else:
+            arrowBounceAnim.draw(wid-100,hei/2, 150,150)
+
     glutSwapBuffers()
 
 def keyboard(key, x, y):
@@ -128,16 +137,26 @@ def animToFitImage(time):
 
 def specialKeyboard(key, x, y):
     print "specialKeyboard(%d,%d,%d)" % (key, x, y)
-    global zipper, nowAnimImage
+    global zipper, nowAnimImage, arrowBounceAnim, arrowBounceSide
     if key == GLUT_KEY_RIGHT:
         if zipper.stepForward():
             nowAnimImage = AnimatedImage(zipper.nowImage)
             jumpToFitImage()
             glutPostRedisplay()
+        else:
+            arrowBounceAnim = AnimatedArrowBounce(arrowBounceAnimationLength, 'right')
+            arrowBounceSide = 'right'
+            startAnimation()
+            glutPostRedisplay()
     elif key == GLUT_KEY_LEFT:
         if zipper.stepBackward():
             nowAnimImage = AnimatedImage(zipper.nowImage)
             jumpToFitImage()
+            glutPostRedisplay()
+        else:
+            arrowBounceAnim = AnimatedArrowBounce(arrowBounceAnimationLength, 'left')
+            arrowBounceSide = 'left'
+            startAnimation()
             glutPostRedisplay()
 
 currentMoveTimer = 0
@@ -185,6 +204,9 @@ def main():
     jumpToFitImage()
 
     mouseMove(0,0)
+
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     print "mainloop"
     glutMainLoop()

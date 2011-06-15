@@ -50,6 +50,7 @@ class DrawImage:
         glTexCoord2f(1, 1); glVertex2f(1, 1) # top right
         glTexCoord2f(1, 0); glVertex2f(1, 0) # bottom right
         glEnd()
+        glBindTexture(GL_TEXTURE_2D, 0)
         glEndList()
 
     def destroyDisplayList(self):
@@ -76,6 +77,7 @@ class DrawImage:
         glPushMatrix()
         glTranslatef(x0,y0,0)
         glScalef(w,h,1)
+        glColor4f(1,1,1,1)
         glCallList(self.displayList)
         glPopMatrix()
 
