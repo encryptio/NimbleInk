@@ -7,6 +7,7 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
 from imagezipper import ImageZipper
+import imagelister
 
 import pygame
 
@@ -74,9 +75,12 @@ def main():
     glutSpecialFunc(specialKeyboard)
     glutReshapeFunc(reshape)
 
+    print "imagelister"
+    files, delete_items = imagelister.findAndExtractFiles(sys.argv[1:])
+
     print "load zipper"
     global zipper
-    zipper = ImageZipper(sys.argv[1:])
+    zipper = ImageZipper(files)
 
     print "mainloop"
     glutMainLoop()
