@@ -6,7 +6,7 @@ import subprocess
 import shutil
 import time
 
-archive_extensions = "7z cbz cbr zip rar ".split(" ")
+archive_extensions = "7z cbz cbr zip rar".split(" ")
 image_extensions   = "jpg jpeg gif png bmp".split(" ")
 
 def findAndExtractFiles(file_list):
