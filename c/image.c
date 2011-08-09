@@ -183,10 +183,10 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
 
             // CCW from bottom left
             glBegin(GL_QUADS);
-            glTexCoord2i(0,0); glVertex2f(x_step* sx,   y_step* sy   );
-            glTexCoord2i(1,0); glVertex2f(x_step*(sx+1),y_step* sy   );
-            glTexCoord2i(1,1); glVertex2f(x_step*(sx+1),y_step*(sy+1));
-            glTexCoord2i(0,1); glVertex2f(x_step* sx,   y_step*(sy+1));
+            glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx,    y1 + y_step* sy   );
+            glTexCoord2i(1,0); glVertex2f(x1 + x_step*(sx+1), y1 + y_step* sy   );
+            glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1), y1 + y_step*(sy+1));
+            glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx,    y1 + y_step*(sy+1));
             glEnd();
 
             slice++;
