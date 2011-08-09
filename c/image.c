@@ -145,6 +145,10 @@ bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
     glGenTextures(gl->s_w * gl->s_h, (GLuint*) &(gl->slices));
     for (int t = 0; t < gl->s_w * gl->s_h; t++) {
         glBindTexture(GL_TEXTURE_2D, gl->slices[t]);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 #ifdef USE_MIPMAPS
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
