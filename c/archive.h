@@ -22,6 +22,7 @@ struct archive {
     void *data[ARCHIVE_MAX_FILES];
 
     int files;
+    int files_loaded;
 };
 
 bool archive_prepare(char *path, struct archive *ar);

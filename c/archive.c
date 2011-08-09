@@ -46,6 +46,7 @@ bool archive_prepare(char *path, struct archive *ar) {
     }
 
     ar->files = 0;
+    ar->files_loaded = 0;
 
     return archive_load_toc(ar);
 }
@@ -63,8 +64,11 @@ bool archive_load_all(struct archive *ar) {
 
 void archive_destroy(struct archive *ar) {
     for (int i = 0; i < ar->files; i++) {
-        free(ar->data[i]);
-        ar->data[i] = NULL;
+        if ( ar->data[i] ) {
+            ar->files_loaded--;
+            free(ar->data[i]);
+            ar->data[i] = NULL;
+        }
     }
 }
 
@@ -278,13 +282,21 @@ static void archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
     for (int i = 0; i < ar->files; i++) {
         printf("loading %d bytes for file %d, name \"%s\"\n", ar->sizes[i], i, ar->names[i]);
 
-        free(ar->data[i]); // in case we run twice
-
-        if ( (ar->data[i] = malloc(ar->sizes[i])) == NULL )
+        void *new_data;
+        if ( (new_data = malloc(ar->sizes[i])) == NULL )
             err(1, "Couldn't malloc space for file");
 
-        if ( !fread(ar->data[i], ar->sizes[i], 1, fh) )
+        if ( !fread(new_data, ar->sizes[i], 1, fh) )
             err(1, "Couldn't read file from archive pipe");
+
+        // XXX memory fence, lock
+
+        if ( ar->data[i] ) {
+            free(ar->data[i]);
+        } else {
+            ar->files_loaded++;
+        }
+        a->data[i] = new_data;
     }
 
     char extra;
