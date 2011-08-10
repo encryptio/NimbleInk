@@ -19,8 +19,10 @@ bool image_load_from_disk(char *path, struct cpuimage *i) {
 
     SDL_Surface *surface;
 
-    if ( !(surface = IMG_Load(path)) )
-        errx(1, "Couldn't load image from file \"%s\""": %s", path, IMG_GetError());
+    if ( !(surface = IMG_Load(path)) ) {
+        warnx("Couldn't load image from file \"%s\""": %s", path, IMG_GetError());
+        return false;
+    }
 
     i->load_time = SDL_GetTicks() - start;
     strncpy(i->path, path, MAX_PATH_LENGTH);
@@ -38,8 +40,10 @@ bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
 
     SDL_Surface *surface;
 
-    if ( !(surface = IMG_Load_RW(SDL_RWFromMem(ptr, len), 1)) )
-        errx(1, "Couldn't load image from memory: %s", IMG_GetError());
+    if ( !(surface = IMG_Load_RW(SDL_RWFromMem(ptr, len), 1)) ) {
+        warnx("Couldn't load image from memory: %s", IMG_GetError());
+        return false;
+    }
 
     i->load_time = SDL_GetTicks() - start;
     snprintf(i->path, MAX_PATH_LENGTH, "Address %p length %d", ptr, len);
@@ -158,6 +162,8 @@ bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, 4, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, 0, (i->is_bgra ? GL_BGRA : GL_RGBA), GL_UNSIGNED_BYTE, i->slices + 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
 #endif
+
+        // TODO: check glGetError
     }
 
     gl->gl_time = SDL_GetTicks() - start;

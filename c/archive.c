@@ -21,12 +21,16 @@ bool archive_prepare(char *path, struct archive *ar) {
     ar->path[ARCHIVE_MAX_PATH_LENGTH-1] = '\0';
 
     FILE *fh = fopen(ar->path, "rb");
-    if ( fh == NULL )
-        err(1, "Couldn't open %s for reading", ar->path);
+    if ( fh == NULL ) {
+        warn("Couldn't open %s for reading", ar->path);
+        return false;
+    }
 
     uint8_t magic_buf[8];
-    if ( !fread(magic_buf, 8, 1, fh) )
-        err(1, "Couldn't read from %s", ar->path);
+    if ( !fread(magic_buf, 8, 1, fh) ) {
+        warn("Couldn't read from %s", ar->path);
+        return false;
+    }
 
     fclose(fh);
 
@@ -36,7 +40,8 @@ bool archive_prepare(char *path, struct archive *ar) {
         ar->type = archive_zip;
     } else {
         ar->type = archive_unknown;
-        errx(1, "Couldn't determine type of archive in %s", ar->path);
+        warnx("Couldn't determine type of archive in %s", ar->path);
+        return false;
     }
 
     ar->files = 0;
@@ -272,7 +277,7 @@ static bool archive_load_toc_rar(struct archive *ar) {
 
 //////////////////////////////////////////////////////////////////////
 
-static void archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
+static bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
     for (int i = 0; i < ar->files; i++) {
         printf("loading %d bytes for file %d, name \"%s\"\n", ar->sizes[i], i, ar->names[i]);
 
@@ -280,8 +285,10 @@ static void archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
         if ( (new_data = malloc(ar->sizes[i])) == NULL )
             err(1, "Couldn't malloc space for file");
 
-        if ( !fread(new_data, ar->sizes[i], 1, fh) )
-            err(1, "Couldn't read file from archive pipe");
+        if ( !fread(new_data, ar->sizes[i], 1, fh) ) {
+            warn("Couldn't read file from archive pipe");
+            return false;
+        }
 
         // XXX memory fence, lock
 
@@ -294,32 +301,38 @@ static void archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
     }
 
     char extra;
-    if ( fread(&extra, 1, 1, fh) )
-        err(1, "Too much data in archive pipe");
+    if ( fread(&extra, 1, 1, fh) ) {
+        warnx("Too much data in archive pipe");
+        return false;
+    }
+
+    return true;
 }
 
-static void archive_load_all_from_command(struct archive *ar, char *cmd) {
+static bool archive_load_all_from_command(struct archive *ar, char *cmd) {
     FILE *fh = popen(cmd, "r");
-    if ( fh == NULL )
-        err(1, "Couldn't popen command: %s", cmd);
+    if ( fh == NULL ) {
+        warn("Couldn't popen command: %s", cmd);
+        return false;
+    }
 
-    archive_load_all_from_filehandle(ar, fh);
+    bool ret = archive_load_all_from_filehandle(ar, fh);
 
     pclose(fh);
+
+    return ret;
 }
 
 static bool archive_load_all_zip(struct archive *ar) {
     char cmd[1000];
     make_command("unzip -p -qq ", ar->path, cmd, 1000);
-    archive_load_all_from_command(ar, cmd);
-    return true;
+    return archive_load_all_from_command(ar, cmd);
 }
 
 static bool archive_load_all_rar(struct archive *ar) {
     char cmd[1000];
     make_command("unrar p -kb -p- -cfg- -c- -idcdpq ", ar->path, cmd, 1000);
-    archive_load_all_from_command(ar, cmd);
-    return true;
+    return archive_load_all_from_command(ar, cmd);
 }
 
 
