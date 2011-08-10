@@ -173,7 +173,7 @@ static bool archive_load_toc_zip(struct archive *ar) {
         int n = 0;
         while ( *c != '\0' && *c != '\n' ) {
             ar->names[ar->files][n++] = *c++;
-            if ( n >= ARCHIVE_MAX_FILENAME_LENGTH-1 )
+            if ( n >= MAX_PATH_LENGTH-1 )
                 break;
         }
         ar->names[ar->files][n] = '\0';
@@ -202,7 +202,7 @@ static bool archive_load_toc_rar(struct archive *ar) {
         if ( line[0] == '-' )
             break;
 
-    char filename[ARCHIVE_MAX_FILENAME_LENGTH];
+    char filename[MAX_PATH_LENGTH];
     while ( fgets(line, 1000, fh) ) {
         // end of listing
         if ( line[0] == '-' )
@@ -217,7 +217,7 @@ static bool archive_load_toc_rar(struct archive *ar) {
 
         // filename on the first line, copy it out
         int i;
-        for (i = 0; i < ARCHIVE_MAX_FILENAME_LENGTH-1; i++) {
+        for (i = 0; i < MAX_PATH_LENGTH-1; i++) {
             if ( *c == '\0' || *c == '\n' )
                 break;
 

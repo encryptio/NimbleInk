@@ -1,10 +1,11 @@
 #ifndef __ARCHIVE_H__
 #define __ARCHIVE_H__
 
+#include "path.h"
+
 #include <stdbool.h>
 
 #define ARCHIVE_MAX_PATH_LENGTH 256
-#define ARCHIVE_MAX_FILENAME_LENGTH 256
 #define ARCHIVE_MAX_FILES 5000
 
 enum archive_type {
@@ -17,7 +18,8 @@ struct archive {
     char path[ARCHIVE_MAX_PATH_LENGTH];
     enum archive_type type;
 
-    char names[ARCHIVE_MAX_FILES][ARCHIVE_MAX_FILENAME_LENGTH];
+    // TODO: make dynamic
+    char names[ARCHIVE_MAX_FILES][MAX_PATH_LENGTH];
     int sizes[ARCHIVE_MAX_FILES];
     void *data[ARCHIVE_MAX_FILES];
 

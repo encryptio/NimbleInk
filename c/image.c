@@ -23,8 +23,8 @@ bool image_load_from_disk(char *path, struct cpuimage *i) {
         errx(1, "Couldn't load image from file \"%s\""": %s", path, IMG_GetError());
 
     i->load_time = SDL_GetTicks() - start;
-    strncpy(i->path, path, IMAGE_MAX_PATH_LENGTH);
-    i->path[IMAGE_MAX_PATH_LENGTH-1] = '\0';
+    strncpy(i->path, path, MAX_PATH_LENGTH);
+    i->path[MAX_PATH_LENGTH-1] = '\0';
 
     bool ret = image_load_from_surface(surface, i);
 
@@ -42,7 +42,7 @@ bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
         errx(1, "Couldn't load image from memory: %s", IMG_GetError());
 
     i->load_time = SDL_GetTicks() - start;
-    snprintf(i->path, IMAGE_MAX_PATH_LENGTH, "Address %p length %d", ptr, len);
+    snprintf(i->path, MAX_PATH_LENGTH, "Address %p length %d", ptr, len);
 
     bool ret = image_load_from_surface(surface, i);
 
@@ -133,7 +133,7 @@ bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
     uint32_t start = SDL_GetTicks();
 
     // copy the unchanged parts of the structure
-    memcpy(gl->path, i->path, IMAGE_MAX_PATH_LENGTH);
+    memcpy(gl->path, i->path, MAX_PATH_LENGTH);
     gl->w = i->w;
     gl->h = i->h;
     gl->s_w = i->s_w;

@@ -1,6 +1,8 @@
 #ifndef __IMAGE_H__
 #define __IMAGE_H__
 
+#include "path.h"
+
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -10,7 +12,6 @@
 // TODO: add thumbnail slices
 
 #define IMAGE_MAX_SLICES 256
-#define IMAGE_MAX_PATH_LENGTH 256
 
 // slice order is top down, left to right (x varies fastest)
 
@@ -21,7 +22,7 @@ struct cpuimage {
     uint16_t s_w; // slices wide
     uint16_t s_h; // slices tall
 
-    char path[IMAGE_MAX_PATH_LENGTH];
+    char path[MAX_PATH_LENGTH];
 
     void *slices; // always RGBA or BGRA, in slice order
 
@@ -38,7 +39,7 @@ struct glimage {
     uint16_t s_w; // slices wide
     uint16_t s_h; // slices tall
 
-    char path[IMAGE_MAX_PATH_LENGTH];
+    char path[MAX_PATH_LENGTH];
 
     GLuint slices[IMAGE_MAX_SLICES];
 
