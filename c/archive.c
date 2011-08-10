@@ -1,5 +1,7 @@
 #include "archive.h"
 
+#include "filetype.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,27 +24,19 @@ bool archive_prepare(char *path, struct archive *ar) {
     if ( fh == NULL )
         err(1, "Couldn't open %s for reading", ar->path);
 
-    char magic_buf[4];
-    if ( !fread(magic_buf, 4, 1, fh) )
+    uint8_t magic_buf[8];
+    if ( !fread(magic_buf, 8, 1, fh) )
         err(1, "Couldn't read from %s", ar->path);
 
     fclose(fh);
 
-    if ( magic_buf[0] == 'R' &&
-            magic_buf[1] == 'a' &&
-            magic_buf[2] == 'r' &&
-            magic_buf[3] == '!' ) {
+    if ( ft_is_rar(magic_buf) ) {
         ar->type = archive_rar;
-
-    } else if ( magic_buf[0] == 'P' &&
-            magic_buf[1] == 'K' ) {
+    } else if ( ft_is_zip(magic_buf) ) {
         ar->type = archive_zip;
-
     } else {
         ar->type = archive_unknown;
         errx(1, "Couldn't determine type of archive in %s", ar->path);
-
-        // TODO: guess from extension
     }
 
     ar->files = 0;
@@ -296,7 +290,7 @@ static void archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
         } else {
             ar->files_loaded++;
         }
-        a->data[i] = new_data;
+        ar->data[i] = new_data;
     }
 
     char extra;
