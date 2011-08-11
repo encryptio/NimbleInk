@@ -153,6 +153,8 @@ bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
 #ifdef USE_MIPMAPS
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // trilinear interpolation
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -183,10 +185,29 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
     float x_step = (x2-x1)/(gl->s_w - ((float) gl->s_w*IMAGE_SLICE_SIZE - gl->w)/IMAGE_SLICE_SIZE);
     float y_step = (y2-y1)/(gl->s_h - ((float) gl->s_h*IMAGE_SLICE_SIZE - gl->h)/IMAGE_SLICE_SIZE);
 
+    glColor3f(1,1,1);
+
     for (int sy = 0; sy < gl->s_h; sy++) {
         for (int sx = 0; sx < gl->s_w; sx++) {
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
+#ifdef USE_MULTIDRAW
+            int drawn = 0;
+            for (int dx = 0; dx <= 1; dx++)
+                for (int dy = 0; dy <= 1; dy++)
+                    if ( dx != 0 || dy != 0 ) {
+                        glColor4f(1,1,1,1.0/(drawn+1));
+
+                        glBegin(GL_QUADS);
+                        glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx    + dx*0.5, y1 + y_step* sy    + dy*0.5);
+                        glTexCoord2i(1,0); glVertex2f(x1 + x_step*(sx+1) + dx*0.5, y1 + y_step* sy    + dy*0.5);
+                        glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1) + dx*0.5, y1 + y_step*(sy+1) + dy*0.5);
+                        glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx    + dx*0.5, y1 + y_step*(sy+1) + dy*0.5);
+                        glEnd();
+
+                        drawn++;
+                    }
+#else
             // CCW from bottom left
             glBegin(GL_QUADS);
             glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx,    y1 + y_step* sy   );
@@ -194,6 +215,7 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
             glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1), y1 + y_step*(sy+1));
             glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx,    y1 + y_step*(sy+1));
             glEnd();
+#endif
 
             slice++;
         }
