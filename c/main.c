@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     while ( running ) {
         SDL_Event evt;
         // TODO: SDL 1.3 adds SDL_WaitEventTimeout, which should be used here
-        while ( SDL_PollEvent(&evt) ) {
+        if ( SDL_WaitEvent(&evt) ) {
             switch ( evt.type ) {
                 case SDL_KEYDOWN:
                     if ( evt.key.keysym.sym == SDLK_RIGHT ) {
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
                     break;
 
                 default:
-                    printf("unhandled event\n");
+                    printf("unhandled event, type=%d\n", evt.type);
             }
         }
 
