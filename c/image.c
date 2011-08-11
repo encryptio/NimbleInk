@@ -201,18 +201,31 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
 #ifdef USE_MULTIDRAW
+
+#ifndef MULTIDRAW_SIZE
+#define MULTIDRAW_SIZE 2
+#endif
+
+#ifndef MULTIDRAW_SHARPNESS_FACTOR
+#define MULTIDRAW_SHARPNESS_FACTOR 0.75
+#endif
+
             // this code does incorrect things with alpha-blended source images
             int drawn = 0;
-            for (int dx = 0; dx <= 1; dx++)
-                for (int dy = 0; dy <= 1; dy++)
+            for (int dx = 0; dx <= MULTIDRAW_SIZE; dx++)
+                for (int dy = 0; dy <= MULTIDRAW_SIZE; dy++)
                     if ( dx != 0 || dy != 0 ) {
                         glColor4f(1,1,1,1.0/(drawn+1));
 
                         glBegin(GL_QUADS);
-                        glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx    + dx*0.5, y1 + y_step* sy    + dy*0.5);
-                        glTexCoord2i(1,0); glVertex2f(x1 + x_step*(sx+1) + dx*0.5, y1 + y_step* sy    + dy*0.5);
-                        glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1) + dx*0.5, y1 + y_step*(sy+1) + dy*0.5);
-                        glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx    + dx*0.5, y1 + y_step*(sy+1) + dy*0.5);
+                        glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx    + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                      y1 + y_step* sy    + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                        glTexCoord2i(1,0); glVertex2f(x1 + x_step*(sx+1) + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                      y1 + y_step* sy    + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                        glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1) + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                      y1 + y_step*(sy+1) + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                        glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx    + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                      y1 + y_step*(sy+1) + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
                         glEnd();
 
                         drawn++;
