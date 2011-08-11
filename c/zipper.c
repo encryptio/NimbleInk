@@ -215,11 +215,16 @@ bool zipper_next(struct zipper *z) {
         }
     }
 
-    char *this_name = strdup(basename(z->path));
+    char pathdupe[MAX_PATH_LENGTH];
 
-    DIR *dh = opendir(dirname(z->path));
+    strcpy(pathdupe, z->path);
+    char *this_name = strdup(basename(pathdupe));
+
+    strcpy(pathdupe, z->path);
+    DIR *dh = opendir(dirname(pathdupe));
     if ( !dh ) {
-        warn("Couldn't opendir %s", dirname(z->path));
+        strcpy(pathdupe, z->path);
+        warn("Couldn't opendir %s", dirname(pathdupe));
         return false;
     }
 
@@ -246,7 +251,8 @@ bool zipper_next(struct zipper *z) {
     if ( !found_new ) {
         if ( z->updepth ) {
             z->updepth--;
-            strncpy(z->path, dirname(z->path), MAX_PATH_LENGTH);
+            strcpy(pathdupe, z->path);
+            strncpy(z->path, dirname(pathdupe), MAX_PATH_LENGTH);
             z->path[MAX_PATH_LENGTH-1] = '\0';
             return zipper_next(z);
         } else {
@@ -254,7 +260,8 @@ bool zipper_next(struct zipper *z) {
         }
     }
 
-    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(z->path), new_name);
+    strcpy(pathdupe, z->path);
+    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(pathdupe), new_name);
 
     zipper_dir_down_check(z);
 
@@ -282,11 +289,16 @@ bool zipper_prev(struct zipper *z) {
         }
     }
 
-    char *this_name = strdup(basename(z->path));
+    char pathdupe[MAX_PATH_LENGTH];
 
-    DIR *dh = opendir(dirname(z->path));
+    strcpy(pathdupe, z->path);
+    char *this_name = strdup(basename(pathdupe));
+
+    strcpy(pathdupe, z->path);
+    DIR *dh = opendir(dirname(pathdupe));
     if ( !dh ) {
-        warn("Couldn't opendir %s", dirname(z->path));
+        strcpy(pathdupe, z->path);
+        warn("Couldn't opendir %s", dirname(pathdupe));
         return false;
     }
 
@@ -313,7 +325,8 @@ bool zipper_prev(struct zipper *z) {
     if ( !found_new ) {
         if ( z->updepth ) {
             z->updepth--;
-            strncpy(z->path, dirname(z->path), MAX_PATH_LENGTH);
+            strcpy(pathdupe, z->path);
+            strncpy(z->path, dirname(pathdupe), MAX_PATH_LENGTH);
             z->path[MAX_PATH_LENGTH-1] = '\0';
             return zipper_prev(z);
         } else {
@@ -321,7 +334,8 @@ bool zipper_prev(struct zipper *z) {
         }
     }
 
-    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(z->path), new_name);
+    strcpy(pathdupe, z->path);
+    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(pathdupe), new_name);
 
     zipper_dir_down_check(z);
 
