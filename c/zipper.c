@@ -143,10 +143,7 @@ static void zipper_dir_down_check(struct zipper *z) {
 
             if ( !found || strcmp(dp->d_name, first) < 0 ) {
                 snprintf(newpath, MAX_PATH_LENGTH, "%s/%s", z->path, dp->d_name);
-                printf("newpath='%s'\n", newpath);
                 if ( ft_file_is_image(newpath) || ft_file_is_archive(newpath) || zipper_is_dir(newpath) ) {
-                    printf("readdir got new first entry: '%s'\n", dp->d_name);
-
                     strncpy(first, dp->d_name, MAX_PATH_LENGTH);
                     first[MAX_PATH_LENGTH-1] = '\0';
                     found = true;
@@ -223,7 +220,6 @@ bool zipper_next(struct zipper *z) {
 
 
         if ( strcmp(dp->d_name, this_name) > 0 && (!found_new || strcmp(dp->d_name, new_name) < 0) ) {
-            printf("readdir got new best entry: '%s'\n", dp->d_name);
             strncpy(new_name, dp->d_name, MAX_PATH_LENGTH);
             new_name[MAX_PATH_LENGTH-1] = '\0';
             found_new = true;
@@ -255,7 +251,6 @@ bool zipper_next(struct zipper *z) {
     }
 
     if ( !zipper_prepare_new_file(z) ) {
-        printf("recursing in zipper_next\n");
         // failed to load this file, try the next
         // TODO: goto?
         return zipper_next(z);
