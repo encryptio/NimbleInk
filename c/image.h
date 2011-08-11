@@ -55,4 +55,6 @@ void image_gl_destroy(struct glimage *gl);
 void image_cpu_destroy(struct cpuimage *i);
 void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2);
 
+extern bool image_multidraw;
+
 #endif
