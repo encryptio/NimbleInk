@@ -116,19 +116,23 @@ static bool zipper_prepare_new_file(struct zipper *z) {
     }
 }
 
-static void zipper_dir_down_check(struct zipper *z) {
+static bool zipper_is_dir(char *path) {
     struct stat st;
-    if ( stat(z->path, &st) )
-        return;
+    if ( stat(path, &st) )
+        return false;
 
-    if ( st.st_mode & S_IFDIR ) {
-        // points to a directory, go into it
+    return (st.st_mode & S_IFDIR) ? true : false;
+}
+
+static void zipper_dir_down_check(struct zipper *z) {
+    if ( zipper_is_dir(z->path) ) {
         z->updepth++;
 
         DIR *dh = opendir(z->path);
         if ( !dh )
             return;
 
+        char newpath[MAX_PATH_LENGTH];
         char first[MAX_PATH_LENGTH];
         bool found = false;
         struct dirent *dp;
@@ -137,22 +141,28 @@ static void zipper_dir_down_check(struct zipper *z) {
             if ( dp->d_name[0] == '.' )
                 continue;
 
-
             if ( !found || strcmp(dp->d_name, first) < 0 ) {
-                printf("readdir got new first entry: '%s'\n", dp->d_name);
-                strncpy(first, dp->d_name, MAX_PATH_LENGTH);
-                first[MAX_PATH_LENGTH-1] = '\0';
-                found = true;
+                snprintf(newpath, MAX_PATH_LENGTH, "%s/%s", z->path, dp->d_name);
+                printf("newpath='%s'\n", newpath);
+                if ( ft_file_is_image(newpath) || ft_file_is_archive(newpath) || zipper_is_dir(newpath) ) {
+                    printf("readdir got new first entry: '%s'\n", dp->d_name);
+
+                    strncpy(first, dp->d_name, MAX_PATH_LENGTH);
+                    first[MAX_PATH_LENGTH-1] = '\0';
+                    found = true;
+                }
             }
         }
 
         closedir(dh);
 
-        strlcat(z->path, "/", MAX_PATH_LENGTH);
-        strlcat(z->path, first, MAX_PATH_LENGTH);
+        if ( found ) {
+            strlcat(z->path, "/", MAX_PATH_LENGTH);
+            strlcat(z->path, first, MAX_PATH_LENGTH);
 
-        // just in case we go down to another directory
-        return zipper_dir_down_check(z);
+            // just in case we go down to another directory
+            return zipper_dir_down_check(z);
+        }
     }
 }
 
@@ -173,11 +183,7 @@ struct zipper * zipper_create(char *path) {
     if ( z->path[strlen(z->path)-1] == '/' ) {
         z->updepth--;
 
-        struct stat st;
-        if ( stat(z->path, &st) )
-            errx(1, "zipper_create called with a trailing slash, but item did not exist");
-
-        if ( !(st.st_mode & S_IFDIR) )
+        if ( !zipper_is_dir(z->path) )
             errx(1, "zipper_create called with trailing slash, but item was not a directory");
     }
 
