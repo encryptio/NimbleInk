@@ -12,6 +12,7 @@
 
 #include "image.h"
 #include "archive.h"
+#include "zipper.h"
 
 int window_width = 800;
 int window_height = 550;
@@ -68,36 +69,25 @@ int main(int argc, char **argv) {
     //////
     // Set up image
     
-    struct archive ar;
-    archive_prepare(argv[1], &ar);
-    archive_load_all(&ar);
-    
-    struct cpuimage cpu;
-    struct glimage gl;
+    struct zipper *z = zipper_create(argv[1]);
 
-    for (int i = 0; i < ar.files; i++) {
-        printf("image: %s\n", ar.names[i]);
-
-        printf("loading cpuimage\n");
-        image_load_from_ram(ar.data[i], ar.sizes[i], &cpu);
-        printf("cpu2gl\n");
-        image_cpu2gl(&cpu, &gl);
-        printf("cpu destroy\n");
-        image_cpu_destroy(&cpu);
-
-        printf("timings: load=%dms, cpu=%dms, gl=%dms\n", gl.load_time, gl.cpu_time, gl.gl_time);
+    do {
+        printf("displaying image\n");
+        printf("   z->path='%s'\n", z->path);
+        printf("   z->ar.is=%d\n", z->ar.is ? 1 : 0);
+        if ( z->ar.is )
+            printf("   z->ar.ar.names[map[%d] = %d])='%s'\n", z->ar.pos, z->ar.map[z->ar.pos], z->ar.ar.names[z->ar.map[z->ar.pos]]);
+        printf("image timings: load=%dms, cpu=%dms, gl=%dms\n", z->image.load_time, z->image.cpu_time, z->image.gl_time);
         
         printf("drawing\n");
-        float f = fit_factor(gl.w, gl.h, window_width, window_height);
-        float w = gl.w*f;
-        float h = gl.h*f;
+        float f = fit_factor(z->image.w, z->image.h, window_width, window_height);
+        float w = z->image.w*f;
+        float h = z->image.h*f;
         glClear(GL_COLOR_BUFFER_BIT);
-        image_draw(&gl, (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
-
-        image_gl_destroy(&gl);
+        image_draw(&(z->image), (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
 
         SDL_GL_SwapBuffers();
-    }
+    } while ( zipper_next(z) );
 
     return 0;
 }
