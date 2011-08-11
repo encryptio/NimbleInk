@@ -17,8 +17,8 @@ static bool archive_load_all_rar(struct archive *ar);
 //////////////////////////////////////////////////////////////////////
 
 bool archive_prepare(char *path, struct archive *ar) {
-    strncpy(ar->path, path, ARCHIVE_MAX_PATH_LENGTH);
-    ar->path[ARCHIVE_MAX_PATH_LENGTH-1] = '\0';
+    strncpy(ar->path, path, MAX_PATH_LENGTH);
+    ar->path[MAX_PATH_LENGTH-1] = '\0';
 
     FILE *fh = fopen(ar->path, "rb");
     if ( fh == NULL ) {

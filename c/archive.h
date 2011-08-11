@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 
-#define ARCHIVE_MAX_PATH_LENGTH 256
 #define ARCHIVE_MAX_FILES 5000
 
 enum archive_type {
@@ -15,7 +14,7 @@ enum archive_type {
 };
 
 struct archive {
-    char path[ARCHIVE_MAX_PATH_LENGTH];
+    char path[MAX_PATH_LENGTH];
     enum archive_type type;
 
     // TODO: make dynamic
