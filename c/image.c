@@ -67,10 +67,19 @@ static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
     if ( i->s_w * i->s_h > IMAGE_MAX_SLICES )
         errx(1, "Too many slices. wanted %d (=%dx%d) slices but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, IMAGE_MAX_SLICES);
 
+    GLint nOfColors = surface->format->BytesPerPixel;
+
+    if ( nOfColors != 4 && nOfColors != 3 ) {
+        SDL_Surface *new = SDL_DisplayFormatAlpha(surface);
+        if ( !new )
+            errx(1, "Couldn't convert surface to display format: %s", SDL_GetError());
+        bool ret = image_load_from_surface(new, i);
+        SDL_FreeSurface(new);
+        return ret;
+    }
+
     if ( (i->slices = malloc(4 * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
         err(1, "Couldn't malloc space for image");
-
-    GLint nOfColors = surface->format->BytesPerPixel;
 
     for (int sy = 0; sy < i->s_h; sy++)
         for (int sx = 0; sx < i->s_w; sx++) {
@@ -120,7 +129,7 @@ static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
                             sl4[x+y*IMAGE_SLICE_SIZE] = 0;
                 }
             } else {
-                errx(1, "Image not truecolor");
+                errx(1, "not reached");
             }
 
             if ( end_copy_row != IMAGE_SLICE_SIZE ) {
