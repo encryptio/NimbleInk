@@ -154,8 +154,8 @@ static void zipper_dir_down_check(struct zipper *z) {
         closedir(dh);
 
         if ( found ) {
-            strlcat(z->path, "/", MAX_PATH_LENGTH);
-            strlcat(z->path, first, MAX_PATH_LENGTH);
+            strncat(z->path, "/", MAX_PATH_LENGTH-strlen(z->path)-1);
+            strncat(z->path, first, MAX_PATH_LENGTH-strlen(z->path)-1);
 
             // just in case we go down to another directory
             return zipper_dir_down_check(z);
