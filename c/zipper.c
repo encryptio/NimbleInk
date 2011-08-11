@@ -13,9 +13,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifdef __gnu_linux__
+static int zipper_compare_files(const void *a, const void *b, void *thunk) {
+#else
+// OSX, *BSD
 static int zipper_compare_files(void *thunk, const void *a, const void *b) {
-    return strcmp((((struct zipper *)thunk)->ar.ar.names[*((int*)a)]),
-                  (((struct zipper *)thunk)->ar.ar.names[*((int*)b)]));
+#endif
+    return strncmp((((struct zipper *)thunk)->ar.ar.names[*((int*)a)]),
+                   (((struct zipper *)thunk)->ar.ar.names[*((int*)b)]), MAX_PATH_LENGTH);
 }
 
 static void zipper_replace_cpuimage(struct zipper *z, struct cpuimage *cpu) {
@@ -86,7 +91,15 @@ static bool zipper_prepare_new_archive(struct zipper *z) {
 
     z->ar.maplen = j;
 
+#ifdef __gnu_linux__
+//extern void qsort_r (void *__base, size_t __nmemb, size_t __size,
+//		     __compar_d_fn_t __compar, void *__arg)
+//  __nonnull ((1, 4));
+    qsort_r(&(z->ar.map), z->ar.maplen, sizeof(int), zipper_compare_files, (void*)z);
+#else
+    // OSX, *BSD
     qsort_r(&(z->ar.map), z->ar.maplen, sizeof(int), (void*)z, zipper_compare_files);
+#endif
 
     return true;
 }
