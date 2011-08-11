@@ -71,23 +71,41 @@ int main(int argc, char **argv) {
     
     struct zipper *z = zipper_create(argv[1]);
 
-    do {
-        printf("displaying image\n");
-        printf("   z->path='%s'\n", z->path);
-        printf("   z->ar.is=%d\n", z->ar.is ? 1 : 0);
-        if ( z->ar.is )
-            printf("   z->ar.ar.names[map[%d] = %d])='%s'\n", z->ar.pos, z->ar.map[z->ar.pos], z->ar.ar.names[z->ar.map[z->ar.pos]]);
-        printf("image timings: load=%dms, cpu=%dms, gl=%dms\n", z->image.load_time, z->image.cpu_time, z->image.gl_time);
-        
-        printf("drawing\n");
+    bool running = true;
+    while ( running ) {
+        SDL_Event evt;
+        // TODO: SDL 1.3 adds SDL_WaitEventTimeout, which should be used here
+        while ( SDL_PollEvent(&evt) ) {
+            switch ( evt.type ) {
+                case SDL_KEYDOWN:
+                    if ( evt.key.keysym.sym == SDLK_RIGHT ) {
+                        zipper_next(z);
+                    } else if ( evt.key.keysym.sym == SDLK_LEFT ) {
+                        zipper_prev(z);
+                    } else if ( evt.key.keysym.sym == SDLK_q ) {
+                        running = false;
+                    } else if ( evt.key.keysym.sym == SDLK_m ) {
+                        image_multidraw = !image_multidraw;
+                    }
+                    break;
+
+                case SDL_QUIT:
+                    running = false;
+                    break;
+
+                default:
+                    printf("unhandled event\n");
+            }
+        }
+
+        printf("drawing at %d\n", SDL_GetTicks());
         float f = fit_factor(z->image.w, z->image.h, window_width, window_height);
         float w = z->image.w*f;
         float h = z->image.h*f;
         glClear(GL_COLOR_BUFFER_BIT);
         image_draw(&(z->image), (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
-
         SDL_GL_SwapBuffers();
-    } while ( zipper_prev(z) );
+    }
 
     return 0;
 }
