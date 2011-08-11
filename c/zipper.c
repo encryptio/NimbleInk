@@ -260,7 +260,75 @@ bool zipper_next(struct zipper *z) {
 }
 
 bool zipper_prev(struct zipper *z) {
-    errx(1, "not implemented");
+    // special case: move backward in an archive
+    if ( z->ar.is ) {
+        if ( z->ar.pos > 0 ) {
+            z->ar.pos--;
+            zipper_load_archive_image(z); // ignore failures, let the display show a broken image
+            return true;
+        }
+    }
+
+    char *this_name = strdup(basename(z->path));
+
+    DIR *dh = opendir(dirname(z->path));
+    if ( !dh ) {
+        warn("Couldn't opendir %s", dirname(z->path));
+        return false;
+    }
+
+    char new_name[MAX_PATH_LENGTH];
+    bool found_new = false;
+    struct dirent *dp;
+    while ( (dp = readdir(dh)) != NULL ) {
+
+        if ( dp->d_name[0] == '.' )
+            continue;
+
+
+        if ( strcmp(dp->d_name, this_name) < 0 && (!found_new || strcmp(dp->d_name, new_name) > 0) ) {
+            strncpy(new_name, dp->d_name, MAX_PATH_LENGTH);
+            new_name[MAX_PATH_LENGTH-1] = '\0';
+            found_new = true;
+        }
+    }
+
+    closedir(dh);
+
+    free(this_name);
+
+    if ( !found_new ) {
+        if ( z->updepth ) {
+            z->updepth--;
+            strncpy(z->path, dirname(z->path), MAX_PATH_LENGTH);
+            z->path[MAX_PATH_LENGTH-1] = '\0';
+            return zipper_prev(z);
+        } else {
+            return false;
+        }
+    }
+
+    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(z->path), new_name);
+
+    zipper_dir_down_check(z);
+
+    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) ) {
+        // not a known filetype
+        return zipper_prev(z);
+    }
+
+    if ( !zipper_prepare_new_file(z) ) {
+        // failed to load this file, try the previous
+        // TODO: goto?
+        return zipper_prev(z);
+    }
+
+    // go to the end of an archive if we went into one
+    if ( z->ar.is ) {
+        z->ar.pos = z->ar.maplen-1;
+    }
+
+    return true;
 }
 
 void zipper_free(struct zipper *z) {

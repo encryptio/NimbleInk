@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         image_draw(&(z->image), (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
 
         SDL_GL_SwapBuffers();
-    } while ( zipper_next(z) );
+    } while ( zipper_prev(z) );
 
     return 0;
 }
