@@ -18,6 +18,16 @@ int window_width = 800;
 int window_height = 550;
 
 void reshape_gl(void) {
+    // on some platforms, the gl context is destroyed when resizing, so we need to rebuild it from scratch
+    glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0,0,0.1,0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // now the actual resize parts
     glViewport(0,0,window_width,window_height);
 
     glMatrixMode(GL_PROJECTION);
@@ -45,26 +55,14 @@ int main(int argc, char **argv) {
 
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-    SDL_Surface *screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL );
+    SDL_Surface *screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
     if ( !screen )
         errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-
-    fprintf(stderr, "SDL Initialized\n");
 
     //////
     // Set up OpenGL
     
-    glEnable(GL_TEXTURE_2D);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     reshape_gl();
-
-    glClearColor(0,0,1,0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    fprintf(stderr, "GL Initialized\n");
 
     //////
     // Set up image
@@ -91,6 +89,15 @@ int main(int argc, char **argv) {
 
                 case SDL_QUIT:
                     running = false;
+                    break;
+
+                case SDL_VIDEORESIZE:
+                    window_width  = evt.resize.w;
+                    window_height = evt.resize.h;
+                    screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
+                    if ( !screen )
+                        errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+                    reshape_gl();
                     break;
 
                 default:
