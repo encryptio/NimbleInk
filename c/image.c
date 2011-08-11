@@ -201,6 +201,7 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
 #ifdef USE_MULTIDRAW
+            // this code does incorrect things with alpha-blended source images
             int drawn = 0;
             for (int dx = 0; dx <= 1; dx++)
                 for (int dy = 0; dy <= 1; dy++)
