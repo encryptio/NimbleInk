@@ -16,6 +16,9 @@
 
 int window_width = 800;
 int window_height = 550;
+int native_width;
+int native_height;
+bool fullscreen = false;
 
 void reshape_gl(void) {
     // on some platforms, the gl context is destroyed when resizing, so we need to rebuild it from scratch
@@ -53,6 +56,11 @@ int main(int argc, char **argv) {
 
     atexit(SDL_Quit);
 
+    const SDL_VideoInfo *video_info = SDL_GetVideoInfo();
+
+    native_width  = video_info->current_w;
+    native_height = video_info->current_h;
+
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
     SDL_Surface *screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
@@ -84,6 +92,24 @@ int main(int argc, char **argv) {
                         running = false;
                     } else if ( evt.key.keysym.sym == SDLK_m ) {
                         image_multidraw = !image_multidraw;
+                    } else if ( evt.key.keysym.sym == SDLK_f ) {
+                        if ( !fullscreen ) {
+                            fullscreen = true;
+                            screen = SDL_SetVideoMode(native_width, native_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE | SDL_FULLSCREEN);
+                            if ( !screen )
+                                errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+                            window_width = screen->w;
+                            window_height = screen->h;
+                            reshape_gl();
+                        } else {
+                            fullscreen = false;
+                            screen = SDL_SetVideoMode(800, 600, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE);
+                            if ( !screen )
+                                errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+                            window_width = screen->w;
+                            window_height = screen->h;
+                            reshape_gl();
+                        }
                     }
                     break;
 
