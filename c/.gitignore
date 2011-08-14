@@ -1,3 +1,11 @@
 /view
 /test
-
+/dep/jpeg-8c/*.o
+/dep/jpeg-8c/cjpeg
+/dep/jpeg-8c/djpeg
+/dep/jpeg-8c/jpegtran
+/dep/jpeg-8c/rdjpgcom
+/dep/jpeg-8c/wrjpgcom
+/dep/jpeg-8c/libjpeg.a
+.DS_Store
+/dep/build
