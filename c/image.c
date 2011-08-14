@@ -12,7 +12,7 @@
 #include <err.h>
 #include <inttypes.h>
 
-bool image_multidraw = false;
+bool image_multidraw = true;
 
 static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i);
 
