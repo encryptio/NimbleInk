@@ -11,7 +11,7 @@ fi
 mkdir -p "$ODIR"
 
 cd dep/jpeg-8c
-make -f makefile.ansi -j3 || exit 1
+make -j3 || exit 1
 cd ../..
 cp dep/jpeg-8c/libjpeg.a "$ODIR"
 
