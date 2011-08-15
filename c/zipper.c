@@ -138,7 +138,7 @@ static bool zipper_is_dir(char *path) {
     return (st.st_mode & S_IFDIR) ? true : false;
 }
 
-static void zipper_dir_down_check(struct zipper *z) {
+static void zipper_dir_down_check(struct zipper *z, bool forwards) {
     if ( zipper_is_dir(z->path) ) {
         z->updepth++;
 
@@ -155,7 +155,7 @@ static void zipper_dir_down_check(struct zipper *z) {
             if ( dp->d_name[0] == '.' )
                 continue;
 
-            if ( !found || english_compare_natural(dp->d_name, first) < 0 ) {
+            if ( !found || (forwards ? english_compare_natural(dp->d_name, first) < 0 : english_compare_natural(dp->d_name, first) > 0) ) {
                 snprintf(newpath, MAX_PATH_LENGTH, "%s/%s", z->path, dp->d_name);
                 if ( ft_file_is_image(newpath) || ft_file_is_archive(newpath) || zipper_is_dir(newpath) ) {
                     strncpy(first, dp->d_name, MAX_PATH_LENGTH);
@@ -172,7 +172,7 @@ static void zipper_dir_down_check(struct zipper *z) {
             strncat(z->path, first, MAX_PATH_LENGTH-strlen(z->path)-1);
 
             // just in case we go down to another directory
-            return zipper_dir_down_check(z);
+            return zipper_dir_down_check(z, forwards);
         }
     }
 }
@@ -198,7 +198,7 @@ struct zipper * zipper_create(char *path) {
             errx(1, "zipper_create called with trailing slash, but item was not a directory");
     }
 
-    zipper_dir_down_check(z);
+    zipper_dir_down_check(z, true);
 
     if ( !zipper_prepare_new_file(z) )
         errx(1, "fixme 54982192");
@@ -264,7 +264,7 @@ bool zipper_next(struct zipper *z) {
     strcpy(pathdupe, z->path);
     snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(pathdupe), new_name);
 
-    zipper_dir_down_check(z);
+    zipper_dir_down_check(z, true);
 
     if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) ) {
         // not a known filetype
@@ -338,7 +338,7 @@ bool zipper_prev(struct zipper *z) {
     strcpy(pathdupe, z->path);
     snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(pathdupe), new_name);
 
-    zipper_dir_down_check(z);
+    zipper_dir_down_check(z, false);
 
     if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) ) {
         // not a known filetype
