@@ -3,6 +3,7 @@
 #include "filetype.h"
 #include "archive.h"
 #include "image.h"
+#include "english.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +20,8 @@ static int zipper_compare_files(const void *a, const void *b, void *thunk) {
 // OSX, *BSD
 static int zipper_compare_files(void *thunk, const void *a, const void *b) {
 #endif
-    return strncmp((((struct zipper *)thunk)->ar.ar.names[*((int*)a)]),
-                   (((struct zipper *)thunk)->ar.ar.names[*((int*)b)]), MAX_PATH_LENGTH);
+    return english_compare_natural((((struct zipper *)thunk)->ar.ar.names[*((int*)a)]),
+                                   (((struct zipper *)thunk)->ar.ar.names[*((int*)b)]));
 }
 
 static void zipper_replace_cpuimage(struct zipper *z, struct cpuimage *cpu) {
@@ -154,7 +155,7 @@ static void zipper_dir_down_check(struct zipper *z) {
             if ( dp->d_name[0] == '.' )
                 continue;
 
-            if ( !found || strcmp(dp->d_name, first) < 0 ) {
+            if ( !found || english_compare_natural(dp->d_name, first) < 0 ) {
                 snprintf(newpath, MAX_PATH_LENGTH, "%s/%s", z->path, dp->d_name);
                 if ( ft_file_is_image(newpath) || ft_file_is_archive(newpath) || zipper_is_dir(newpath) ) {
                     strncpy(first, dp->d_name, MAX_PATH_LENGTH);
@@ -237,7 +238,7 @@ bool zipper_next(struct zipper *z) {
             continue;
 
 
-        if ( strcmp(dp->d_name, this_name) > 0 && (!found_new || strcmp(dp->d_name, new_name) < 0) ) {
+        if ( english_compare_natural(dp->d_name, this_name) > 0 && (!found_new || english_compare_natural(dp->d_name, new_name) < 0) ) {
             strncpy(new_name, dp->d_name, MAX_PATH_LENGTH);
             new_name[MAX_PATH_LENGTH-1] = '\0';
             found_new = true;
@@ -311,7 +312,7 @@ bool zipper_prev(struct zipper *z) {
             continue;
 
 
-        if ( strcmp(dp->d_name, this_name) < 0 && (!found_new || strcmp(dp->d_name, new_name) > 0) ) {
+        if ( english_compare_natural(dp->d_name, this_name) < 0 && (!found_new || english_compare_natural(dp->d_name, new_name) > 0) ) {
             strncpy(new_name, dp->d_name, MAX_PATH_LENGTH);
             new_name[MAX_PATH_LENGTH-1] = '\0';
             found_new = true;
