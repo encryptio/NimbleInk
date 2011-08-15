@@ -47,6 +47,16 @@ float fit_factor(float mw, float mh, float w, float h) {
     return sf;
 }
 
+void set_window_name(struct zipper *z) {
+    char name[1000];
+    if ( z->ar.is )
+        snprintf(name, 1000, "%s: %s", z->path, z->ar.ar.names[z->ar.map[z->ar.pos]]);
+    else
+        snprintf(name, 1000, "%s", z->path);
+
+    SDL_WM_SetCaption(name, name);
+}
+
 int main(int argc, char **argv) {
     //////
     // Set up SDL
@@ -77,6 +87,8 @@ int main(int argc, char **argv) {
     
     struct zipper *z = zipper_create(argv[1]);
 
+    set_window_name(z);
+
     bool running = true;
     while ( running ) {
         SDL_Event evt;
@@ -86,8 +98,10 @@ int main(int argc, char **argv) {
                 case SDL_KEYDOWN:
                     if ( evt.key.keysym.sym == SDLK_RIGHT ) {
                         zipper_next(z);
+                        set_window_name(z);
                     } else if ( evt.key.keysym.sym == SDLK_LEFT ) {
                         zipper_prev(z);
+                        set_window_name(z);
                     } else if ( evt.key.keysym.sym == SDLK_q ) {
                         running = false;
                     } else if ( evt.key.keysym.sym == SDLK_m ) {
