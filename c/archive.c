@@ -251,7 +251,9 @@ static bool archive_load_toc_rar(struct archive *ar) {
             continue;
         }
 
-        if ( packed > size ) {
+        // files can get bigger if compressed incorrectly; however, if the
+        // difference is too big, we've probably made a mistake.
+        if ( packed*0.9 > size ) {
             warnx("eeek");
             continue;
         }
