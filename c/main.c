@@ -54,6 +54,16 @@ void set_window_name(struct zipper *z) {
     else
         snprintf(name, 1000, "%s", z->path);
 
+    // sanitize (OSX yells otherwise)
+    int mv = 0;
+    int i;
+    for (i = 0; name[i]; i++)
+        if ( !isprint(name[i]) )
+            mv++;
+        else
+            name[i-mv] = name[i];
+    name[i-mv] = '\0';
+
     SDL_WM_SetCaption(name, name);
 }
 
