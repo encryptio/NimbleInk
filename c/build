@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "`uname`" == "Linux" ]; then
-    LINK="`sdl-config --cflags --libs` -lSDL_image -lGL -lGLU"
+    LINK="`sdl-config --cflags --libs` -lSDL_image -lGL -lGLU -D_GNU_SOURCE"
 elif [ "`uname`" == "Darwin" ]; then
     LINK="`sdl-config --cflags --libs` -framework OpenGL -lSDL_image"
 else
