@@ -24,10 +24,17 @@ int main(int argc, char **argv) {
             int x = 0;
             int y = 0;
             for (int i = 0; i < IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE; i++) {
-                uint8_t r = slicebase[i*4+2];
-                uint8_t g = slicebase[i*4+1];
-                uint8_t b = slicebase[i*4+0];
-                uint8_t a = slicebase[i*4+3];
+                uint8_t r,g,b,a;
+                if ( cpu.is_bgra ) {
+                    r = slicebase[i*4+2];
+                    g = slicebase[i*4+1];
+                    b = slicebase[i*4  ];
+                } else {
+                    r = slicebase[i*4  ];
+                    g = slicebase[i*4+1];
+                    b = slicebase[i*4+2];
+                }
+                a = slicebase[i*4+3];
 
                 if ( a < 255 ) {
                     uint8_t base_checker = ((x/16 % 2) + (y/16 % 2)) % 2 ? 192 : 64;
