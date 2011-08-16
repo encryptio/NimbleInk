@@ -11,4 +11,5 @@ fi
 mkdir -p bin
 
 cc -Wall -O0 -std=c99 -g -o bin/view $LINK $@ main.c image.c archive.c filetype.c zipper.c english.c
+cc -Wall -O0 -std=c99 -g -o bin/imagedebug $LINK $@ main-imagedebug.c image.c
 
