@@ -7,3 +7,8 @@ make -j3 || exit 1
 cd ../..
 cp dep/jpeg-8c/{libjpeg.a,jconfig.h,jmorecfg.h,jerror.h,jpeglib.h} dep/build
 
+cd dep/giflib-4.1.6
+./configure && make -j3
+cd ../..
+cp dep/giflib-4.1.6/lib/{.libs/libgif.a,gif_lib.h} dep/build
+
