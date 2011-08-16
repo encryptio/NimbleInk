@@ -12,6 +12,7 @@ bool ft_is_png(uint8_t *data);
 bool ft_is_gif(uint8_t *data);
 bool ft_is_tif(uint8_t *data);
 bool ft_is_pnm(uint8_t *data);
+bool ft_is_bmp(uint8_t *data);
 
 // meta-types
 bool ft_is_archive(uint8_t *data);

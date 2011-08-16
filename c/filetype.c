@@ -68,6 +68,11 @@ bool ft_is_pnm(uint8_t *data) {
            isspace(data[2]);
 }
 
+bool ft_is_bmp(uint8_t *data) {
+    return data[0] == 'B' &&
+           data[1] == 'M';
+}
+
 bool ft_is_archive(uint8_t *data) {
     return ft_is_zip(data) ||
            ft_is_rar(data);
@@ -78,7 +83,8 @@ bool ft_is_image(uint8_t *data) {
            ft_is_png(data) ||
            ft_is_gif(data) ||
            ft_is_tif(data) ||
-           ft_is_pnm(data);
+           ft_is_pnm(data) ||
+           ft_is_bmp(data);
 }
 
 bool ft_file_is_archive(char *path) {
