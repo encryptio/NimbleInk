@@ -5,5 +5,5 @@ mkdir -p dep/build
 cd dep/jpeg-8c
 make -j3 || exit 1
 cd ../..
-cp dep/jpeg-8c/libjpeg.a dep/build
+cp dep/jpeg-8c/{libjpeg.a,jconfig.h,jmorecfg.h,jerror.h,jpeglib.h} dep/build
 
