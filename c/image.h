@@ -13,6 +13,9 @@
 
 #define IMAGE_MAX_SLICES 256
 
+// 32MiB
+#define IMAGE_MAX_FILESIZE 1024*1024*32
+
 // slice order is top down, left to right (x varies fastest)
 
 struct cpuimage {

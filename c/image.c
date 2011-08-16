@@ -17,22 +17,38 @@ bool image_multidraw = true;
 static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i);
 
 bool image_load_from_disk(char *path, struct cpuimage *i) {
-    uint32_t start = SDL_GetTicks();
+    FILE *fh = fopen(path, "rb");
 
-    SDL_Surface *surface;
+    uint8_t *buf;
+    int alloced = 8192;
+    int used = 0;
 
-    if ( !(surface = IMG_Load(path)) ) {
-        warnx("Couldn't load image from file \"%s\""": %s", path, IMG_GetError());
-        return false;
+    if ( (buf = malloc(alloced)) == NULL )
+        err(1, "Couldn't allocate space for image load from disk");
+
+    size_t did_read;
+    while ( (did_read = fread(buf+used, 1, alloced-used, fh)) > 0 ) {
+        used += did_read;
+        if ( used == alloced ) {
+            alloced *= 2;
+
+            if ( alloced > IMAGE_MAX_FILESIZE ) {
+                warnx("Image in %s is too big to be loaded (max size %d bytes)", path, IMAGE_MAX_FILESIZE);
+                fclose(fh);
+                free(buf);
+                return false;
+            }
+
+            if ( (buf = realloc(buf, alloced)) == NULL )
+                err(1, "Couldn't realloc space for image load from disk");
+        }
     }
 
-    i->load_time = SDL_GetTicks() - start;
-    strncpy(i->path, path, MAX_PATH_LENGTH);
-    i->path[MAX_PATH_LENGTH-1] = '\0';
+    fclose(fh);
 
-    bool ret = image_load_from_surface(surface, i);
+    bool ret = image_load_from_ram(buf, used, i);
 
-    SDL_FreeSurface(surface);
+    free(buf);
 
     return ret;
 }
