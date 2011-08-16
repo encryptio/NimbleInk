@@ -50,7 +50,7 @@ float fit_factor(float mw, float mh, float w, float h) {
 void set_window_name(struct zipper *z) {
     char name[1000];
     if ( z->ar.is )
-        snprintf(name, 1000, "%s: %s", z->path, z->ar.ar.names[z->ar.map[z->ar.pos]]);
+        snprintf(name, 1000, "%s: (%d/%d) %s", z->path, z->ar.pos+1, z->ar.maplen, z->ar.ar.names[z->ar.map[z->ar.pos]]);
     else
         snprintf(name, 1000, "%s", z->path);
 
