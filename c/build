@@ -11,10 +11,10 @@ fi
 
 LINK="$LINK -Ldep/build -ljpeg"
 
-COMPILE="$COMPILE -Idep/build"
+COMPILE="-Wall -O2 -std=c99 -g $COMPILE -Idep/build"
 
 mkdir -p bin
 
-cc -Wall -O0 -std=c99 -g -o bin/view $COMPILE $LINK $@ main.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c
-cc -Wall -O0 -std=c99 -g -o bin/imagedebug $COMPILE $LINK $@ main-imagedebug.c image.c image-libjpeg.c filetype.c
+cc -o bin/view $COMPILE $LINK $@ main.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c
+cc -o bin/imagedebug $COMPILE $LINK $@ main-imagedebug.c image.c image-libjpeg.c filetype.c
 
