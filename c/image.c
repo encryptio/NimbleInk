@@ -1,6 +1,9 @@
 #include "image.h"
 
+#include "image-libjpeg.h"
+
 #include "archive.h"
+#include "filetype.h"
 
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -56,34 +59,35 @@ bool image_load_from_disk(char *path, struct cpuimage *i) {
 bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
     uint32_t start = SDL_GetTicks();
 
-    SDL_Surface *surface;
+    bool ret;
 
-    if ( !(surface = IMG_Load_RW(SDL_RWFromMem(ptr, len), 1)) ) {
-        warnx("Couldn't load image from memory: %s", IMG_GetError());
-        return false;
+    if ( false && len > 8 && ft_is_jpg((uint8_t*) ptr) ) {
+        ret = image_load_from_ram_libjpeg(ptr, len, i);
+
+        i->cpu_time = i->load_time = SDL_GetTicks() - start;
+    } else {
+        // not something we know how to deal with natively, let SDL_image try
+        SDL_Surface *surface;
+
+        if ( !(surface = IMG_Load_RW(SDL_RWFromMem(ptr, len), 1)) ) {
+            warnx("Couldn't load image from memory: %s", IMG_GetError());
+            return false;
+        }
+
+        i->load_time = SDL_GetTicks() - start;
+
+        ret = image_load_from_surface(surface, i);
+
+        SDL_FreeSurface(surface);
     }
 
-    i->load_time = SDL_GetTicks() - start;
     snprintf(i->path, MAX_PATH_LENGTH, "Address %p length %d", ptr, len);
-
-    bool ret = image_load_from_surface(surface, i);
-
-    SDL_FreeSurface(surface);
 
     return ret;
 }
 
 static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
     uint32_t start = SDL_GetTicks();
-
-    i->is_bgra = !(surface->format->Rmask == 0x000000ff);
-    i->w = surface->w;
-    i->h = surface->h;
-    i->s_w = (surface->w + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
-    i->s_h = (surface->h + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
-
-    if ( i->s_w * i->s_h > IMAGE_MAX_SLICES )
-        errx(1, "Too many slices. wanted %d (=%dx%d) slices but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, IMAGE_MAX_SLICES);
 
     GLint nOfColors = surface->format->BytesPerPixel;
 
@@ -96,8 +100,9 @@ static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
         return ret;
     }
 
-    if ( (i->slices = malloc(4 * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
-        err(1, "Couldn't malloc space for image");
+    i->is_bgra = !(surface->format->Rmask == 0x000000ff);
+    if ( !image_setup_cpu_wh(i, surface->w, surface->h) )
+        return false;
 
     for (int sy = 0; sy < i->s_h; sy++)
         for (int sx = 0; sx < i->s_w; sx++) {
@@ -260,5 +265,22 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
             slice++;
         }
     }
+}
+
+bool image_setup_cpu_wh(struct cpuimage *i, int w, int h) {
+    i->w = w;
+    i->h = h;
+    i->s_w = (w + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
+    i->s_h = (h + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
+
+    if ( i->s_w * i->s_h > IMAGE_MAX_SLICES ) {
+        warnx("Too many slices. wanted %d (=%dx%d) slices but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, IMAGE_MAX_SLICES);
+        return false;
+    }
+
+    if ( (i->slices = malloc(4 * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
+        err(1, "Couldn't malloc space for image");
+
+    return true;
 }
 

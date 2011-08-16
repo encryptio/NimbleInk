@@ -58,6 +58,9 @@ void image_gl_destroy(struct glimage *gl);
 void image_cpu_destroy(struct cpuimage *i);
 void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2);
 
+// internal to the image_* functions
+bool image_setup_cpu_wh(struct cpuimage *i, int w, int h); // sets w,h and allocates slices
+
 extern bool image_multidraw;
 
 #endif
