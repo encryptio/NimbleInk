@@ -1,0 +1,2 @@
+This software is based in part on the work of the Independent JPEG Group.
+It uses libjpeg, as distributed on http://www.ijg.org/
