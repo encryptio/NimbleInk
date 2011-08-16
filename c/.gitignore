@@ -1,4 +1,4 @@
-/view
+/bin
 /test
 /dep/jpeg-8c/*.o
 /dep/jpeg-8c/libjpeg.a
