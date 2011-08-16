@@ -1,15 +1,16 @@
 #!/bin/sh
 
 if [ "`uname`" == "Linux" ]; then
-    LINK="`sdl-config --cflags --libs` -lSDL_image -lGL -lGLU -D_GNU_SOURCE"
+    LINK="`sdl-config --cflags --libs` -lSDL_image -lGL -lGLU"
+    COMPILE="-D_GNU_SOURCE"
 elif [ "`uname`" == "Darwin" ]; then
     LINK="`sdl-config --cflags --libs` -framework OpenGL -lSDL_image"
 else
-    echo "Don't know how to link on `uname`";
+    echo "Don't know how to compile on `uname`";
 fi
 
 mkdir -p bin
 
-cc -Wall -O0 -std=c99 -g -o bin/view $LINK $@ main.c image.c archive.c filetype.c zipper.c english.c
-cc -Wall -O0 -std=c99 -g -o bin/imagedebug $LINK $@ main-imagedebug.c image.c
+cc -Wall -O0 -std=c99 -g -o bin/view $COMPILE $LINK $@ main.c image.c archive.c filetype.c zipper.c english.c
+cc -Wall -O0 -std=c99 -g -o bin/imagedebug $COMPILE $LINK $@ main-imagedebug.c image.c
 
