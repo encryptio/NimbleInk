@@ -4,11 +4,11 @@
 #include <ctype.h>
 #include <string.h>
 
-static void ft_get8(char *path, uint8_t *data) {
-    memset(data, 0, 8);
+static void ft_get_data(char *path, uint8_t *data) {
+    memset(data, 0, FILETYPE_MAGIC_BYTES);
     FILE *fh = fopen(path, "rb");
     if ( fh == NULL ) return;
-    fread(data, 1, 8, fh);
+    fread(data, 1, FILETYPE_MAGIC_BYTES, fh);
     fclose(fh);
 }
 
@@ -88,14 +88,14 @@ bool ft_is_image(uint8_t *data) {
 }
 
 bool ft_file_is_archive(char *path) {
-    uint8_t data[8];
-    ft_get8(path, data);
+    uint8_t data[FILETYPE_MAGIC_BYTES];
+    ft_get_data(path, data);
     return ft_is_archive(data);
 }
 
 bool ft_file_is_image(char *path) {
-    uint8_t data[8];
-    ft_get8(path, data);
+    uint8_t data[FILETYPE_MAGIC_BYTES];
+    ft_get_data(path, data);
     return ft_is_image(data);
 }
 

@@ -4,7 +4,9 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-// these functions need at least 8 bytes of the file
+#define FILETYPE_MAGIC_BYTES 8
+
+// these functions assume there is at least FILETYPE_MAGIC_BYTES accessible
 bool ft_is_rar(uint8_t *data);
 bool ft_is_zip(uint8_t *data);
 bool ft_is_jpg(uint8_t *data);

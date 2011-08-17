@@ -26,8 +26,8 @@ bool archive_prepare(char *path, struct archive *ar) {
         return false;
     }
 
-    uint8_t magic_buf[8];
-    if ( !fread(magic_buf, 8, 1, fh) ) {
+    uint8_t magic_buf[FILETYPE_MAGIC_BYTES];
+    if ( !fread(magic_buf, FILETYPE_MAGIC_BYTES, 1, fh) ) {
         warn("Couldn't read from %s", ar->path);
         return false;
     }

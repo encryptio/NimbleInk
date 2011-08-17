@@ -87,7 +87,7 @@ static bool zipper_prepare_new_archive(struct zipper *z) {
     // ignore non-image files
     int j = 0;
     for (int i = 0; i < z->ar.ar.files; i++)
-        if ( z->ar.ar.sizes[i] >= 8 && ft_is_image(z->ar.ar.data[i]) )
+        if ( z->ar.ar.sizes[i] >= FILETYPE_MAGIC_BYTES && ft_is_image(z->ar.ar.data[i]) )
             z->ar.map[j++] = i;
 
     z->ar.maplen = j;

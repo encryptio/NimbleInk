@@ -60,7 +60,7 @@ bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
     bool ret = false;
 
 #if ENABLE_LIBJPEG
-    if ( !ret && len > 8 && ft_is_jpg((uint8_t*) ptr) )
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_jpg((uint8_t*) ptr) )
         ret = image_load_from_ram_libjpeg(ptr, len, i);
 #endif
 #if ENABLE_SDLIMAGE
