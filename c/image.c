@@ -59,7 +59,7 @@ bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
 
     bool ret;
 
-    if ( false && len > 8 && ft_is_jpg((uint8_t*) ptr) ) {
+    if ( len > 8 && ft_is_jpg((uint8_t*) ptr) ) {
         ret = image_load_from_ram_libjpeg(ptr, len, i);
     } else {
         ret = image_load_from_ram_sdl_image(ptr, len, i);
