@@ -1,3 +1,5 @@
+#if ENABLE_LIBJPEG
+
 #include "image-libjpeg.h"
 
 #include <string.h>
@@ -98,4 +100,6 @@ DESTROY:
 
     return ret;
 }
+
+#endif /* ENABLE_LIBJPEG */
 
