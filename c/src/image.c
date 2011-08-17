@@ -1,6 +1,7 @@
 #include "image.h"
 
 #include "image-libjpeg.h"
+#include "image-giflib.h"
 #include "image-sdl_image.h"
 
 #include "archive.h"
@@ -62,6 +63,10 @@ bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
 #if ENABLE_LIBJPEG
     if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_jpg((uint8_t*) ptr) )
         ret = image_load_from_ram_libjpeg(ptr, len, i);
+#endif
+#if ENABLE_GIFLIB
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_gif((uint8_t*) ptr) )
+        ret = image_load_from_ram_giflib(ptr, len, i);
 #endif
 #if ENABLE_SDL_IMAGE
     if ( !ret )
