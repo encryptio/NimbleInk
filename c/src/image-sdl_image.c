@@ -1,3 +1,5 @@
+#if ENABLE_SDL_IMAGE
+
 #include "image.h"
 
 #include <SDL.h>
@@ -101,4 +103,6 @@ static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
 
     return true;
 }
+
+#endif /* ENABLE_SDL_IMAGE */
 

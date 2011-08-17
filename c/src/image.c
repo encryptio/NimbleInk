@@ -63,7 +63,7 @@ bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
     if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_jpg((uint8_t*) ptr) )
         ret = image_load_from_ram_libjpeg(ptr, len, i);
 #endif
-#if ENABLE_SDLIMAGE
+#if ENABLE_SDL_IMAGE
     if ( !ret )
         ret = image_load_from_ram_sdl_image(ptr, len, i);
 #endif
