@@ -13,6 +13,7 @@ fi
 LINK="$LINK dep/build/libjpeg.a"
 
 COMPILE="-Wall -O2 -std=c99 -g $COMPILE -Idep/build"
+COMPILE="$COMPILE -DENABLE_LIBJPEG"
 
 mkdir -p bin
 mkdir -p obj
