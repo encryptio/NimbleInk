@@ -18,7 +18,7 @@ mkdir -p bin
 mkdir -p obj
 
 for i in main.c main-imagedebug.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c image-sdl_image.c; do
-    cc -c -o obj/"`basename "$i" .c`".o $COMPILE $@ "$i" || exit 1
+    cc -c -o obj/"`basename "$i" .c`".o $COMPILE $@ src/"$i" || exit 1
 done
 
 cc -o bin/view $LINK $@ obj/{main,image,archive,filetype,zipper,english,image-libjpeg,image-sdl_image}.o
