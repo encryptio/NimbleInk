@@ -57,13 +57,16 @@ bool image_load_from_disk(char *path, struct cpuimage *i) {
 bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
     uint32_t start = SDL_GetTicks();
 
-    bool ret;
+    bool ret = false;
 
-    if ( len > 8 && ft_is_jpg((uint8_t*) ptr) ) {
+#if ENABLE_LIBJPEG
+    if ( !ret && len > 8 && ft_is_jpg((uint8_t*) ptr) )
         ret = image_load_from_ram_libjpeg(ptr, len, i);
-    } else {
+#endif
+#if ENABLE_SDLIMAGE
+    if ( !ret )
         ret = image_load_from_ram_sdl_image(ptr, len, i);
-    }
+#endif
 
     i->load_time = SDL_GetTicks() - start;
 
