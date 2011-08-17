@@ -1,10 +1,11 @@
 #!/bin/sh
 
 if [ "`uname`" == "Linux" ]; then
-    LINK="`sdl-config --cflags --libs` -lSDL_image -lGL -lGLU"
-    COMPILE="-D_GNU_SOURCE"
+    LINK="`sdl-config --libs` -lSDL_image -lGL -lGLU"
+    COMPILE="`sdl-config --cflags` -D_GNU_SOURCE"
 elif [ "`uname`" == "Darwin" ]; then
-    LINK="`sdl-config --cflags --libs` -framework OpenGL -lSDL_image"
+    LINK="`sdl-config --libs` -framework OpenGL -lSDL_image"
+    COMPILE="`sdl-config --cflags`"
 else
     echo "Don't know how to compile on `uname`";
 fi
@@ -14,7 +15,12 @@ LINK="$LINK -Ldep/build -ljpeg"
 COMPILE="-Wall -O2 -std=c99 -g $COMPILE -Idep/build"
 
 mkdir -p bin
+mkdir -p obj
 
-cc -o bin/view $COMPILE $LINK $@ main.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c
-cc -o bin/imagedebug $COMPILE $LINK $@ main-imagedebug.c image.c image-libjpeg.c filetype.c
+for i in main.c main-imagedebug.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c image-sdl_image.c; do
+    cc -c -o obj/"`basename "$i" .c`".o $COMPILE $@ "$i" || exit 1
+done
+
+cc -o bin/view $LINK $@ obj/{main,image,archive,filetype,zipper,english,image-libjpeg,image-sdl_image}.o
+cc -o bin/imagedebug $LINK $@ obj/{main-imagedebug,image,image-libjpeg,filetype,image-sdl_image}.o
 

@@ -55,4 +55,5 @@
 /dep/build
 /view.dSYM
 /bin
+/obj
 /test
