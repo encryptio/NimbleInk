@@ -1,7 +1,22 @@
 .DS_Store
 
 /dep/jpeg-8c/*.o
+/dep/jpeg-8c/*.lo
+/dep/jpeg-8c/*.la
 /dep/jpeg-8c/libjpeg.a
+/dep/jpeg-8c/.deps/
+/dep/jpeg-8c/.libs/
+/dep/jpeg-8c/Makefile
+/dep/jpeg-8c/cjpeg
+/dep/jpeg-8c/djpeg
+/dep/jpeg-8c/config.log
+/dep/jpeg-8c/config.status
+/dep/jpeg-8c/jconfig.h
+/dep/jpeg-8c/jpegtran
+/dep/jpeg-8c/libtool
+/dep/jpeg-8c/rdjpgcom
+/dep/jpeg-8c/stamp-h1
+/dep/jpeg-8c/wrjpgcom
 
 /dep/giflib-4.1.6/Makefile
 /dep/giflib-4.1.6/lib/*.o
