@@ -22,7 +22,7 @@ bool image_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
     bool ret = false;
     uint8_t *scanlines = NULL;
 
-    cinfo.err = jpeg_std_error(&jerr);
+    cinfo.err = jpeg_std_error(&jerr); // TODO: replace with non-terminating error handler
     jpeg_create_decompress(&cinfo);
 
     jpeg_mem_src(&cinfo, ptr, len);
