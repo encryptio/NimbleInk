@@ -132,10 +132,12 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
     float x_step = (x2-x1)/(gl->s_w - ((float) gl->s_w*IMAGE_SLICE_SIZE - gl->w)/IMAGE_SLICE_SIZE);
     float y_step = (y2-y1)/(gl->s_h - ((float) gl->s_h*IMAGE_SLICE_SIZE - gl->h)/IMAGE_SLICE_SIZE);
 
-    glColor3f(1,1,1);
-
     for (int sy = 0; sy < gl->s_h; sy++) {
+        double b = y1 + y_step* sy;
+        double t = y1 + y_step*(sy+1);
         for (int sx = 0; sx < gl->s_w; sx++) {
+            double l = x1 + x_step* sx;
+            double r = x1 + x_step*(sx+1);
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
             if ( image_multidraw ) {
@@ -155,27 +157,39 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
                             glColor4f(1,1,1,1.0/(drawn+1));
 
                             glBegin(GL_QUADS);
-                            glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx    + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          y1 + y_step* sy    + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
-                            glTexCoord2i(1,0); glVertex2f(x1 + x_step*(sx+1) + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          y1 + y_step* sy    + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
-                            glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1) + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          y1 + y_step*(sy+1) + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
-                            glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx    + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          y1 + y_step*(sy+1) + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                            glTexCoord2i(0,0); glVertex2f(l + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                          b + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                            glTexCoord2i(1,0); glVertex2f(r + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                          b + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                            glTexCoord2i(1,1); glVertex2f(r + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                          t + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                            glTexCoord2i(0,1); glVertex2f(l + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
+                                                          t + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
                             glEnd();
 
                             drawn++;
                         }
             } else {
                 // CCW from bottom left
+                glColor3f(1,1,1);
                 glBegin(GL_QUADS);
-                glTexCoord2i(0,0); glVertex2f(x1 + x_step* sx,    y1 + y_step* sy   );
-                glTexCoord2i(1,0); glVertex2f(x1 + x_step*(sx+1), y1 + y_step* sy   );
-                glTexCoord2i(1,1); glVertex2f(x1 + x_step*(sx+1), y1 + y_step*(sy+1));
-                glTexCoord2i(0,1); glVertex2f(x1 + x_step* sx,    y1 + y_step*(sy+1));
+                glTexCoord2i(0,0); glVertex2f(l,b);
+                glTexCoord2i(1,0); glVertex2f(r,b);
+                glTexCoord2i(1,1); glVertex2f(r,t);
+                glTexCoord2i(0,1); glVertex2f(l,t);
                 glEnd();
             }
+
+#if DEBUG_DRAW_SLICES
+            glColor3f(1,0.2,0.2);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glBegin(GL_LINE_LOOP);
+            glVertex2f(l,b);
+            glVertex2f(r,b);
+            glVertex2f(r,t);
+            glVertex2f(l,t);
+            glEnd();
+#endif
 
             slice++;
         }
