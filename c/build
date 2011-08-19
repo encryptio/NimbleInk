@@ -13,15 +13,15 @@ fi
 LINK="$LINK dep/build/libjpeg.a dep/build/libgif.a"
 
 COMPILE="-Wall -O2 -std=c99 -g $COMPILE -Idep/build"
-COMPILE="$COMPILE -DENABLE_LIBJPEG -DENABLE_GIFLIB"
+COMPILE="$COMPILE -DENABLE_LIBJPEG -DENABLE_GIFLIB -DENABLE_PNM"
 
 mkdir -p bin
 mkdir -p obj
 
-for i in main.c main-imagedebug.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c image-sdl_image.c image-giflib.c; do
+for i in main.c main-imagedebug.c image.c archive.c filetype.c zipper.c english.c image-libjpeg.c image-sdl_image.c image-giflib.c image-pnm.c; do
     cc -c -o obj/"`basename "$i" .c`".o $COMPILE $@ src/"$i" || exit 1
 done
 
-cc -o bin/view $@ obj/{main,image,archive,filetype,zipper,english,image-libjpeg,image-sdl_image,image-giflib}.o $LINK
-cc -o bin/imagedebug $@ obj/{main-imagedebug,image,image-libjpeg,filetype,image-sdl_image,image-giflib}.o $LINK
+cc -o bin/view $@ obj/{main,image,archive,filetype,zipper,english,image-libjpeg,image-sdl_image,image-giflib,image-pnm}.o $LINK
+cc -o bin/imagedebug $@ obj/{main-imagedebug,image,image-libjpeg,filetype,image-sdl_image,image-giflib,image-pnm}.o $LINK
 
