@@ -63,7 +63,7 @@ static bool zipper_load_direct_image(struct zipper *z) {
     return true;
 }
 
-static bool zipper_prepare_new_archive(struct zipper *z) {
+static bool zipper_prepare_new_archive(struct zipper *z, bool forwards) {
     if ( z->ar.initialized ) {
         z->ar.initialized = false;
         archive_destroy(&(z->ar.ar));
@@ -82,7 +82,6 @@ static bool zipper_prepare_new_archive(struct zipper *z) {
     }
 
     z->ar.is = true;
-    z->ar.pos = 0;
 
     // ignore non-image files
     int j = 0;
@@ -91,6 +90,8 @@ static bool zipper_prepare_new_archive(struct zipper *z) {
             z->ar.map[j++] = i;
 
     z->ar.maplen = j;
+
+    z->ar.pos = forwards ? 0 : z->ar.maplen-1;
 
 #ifdef __gnu_linux__
 //extern void qsort_r (void *__base, size_t __nmemb, size_t __size,
@@ -105,7 +106,7 @@ static bool zipper_prepare_new_archive(struct zipper *z) {
     return true;
 }
 
-static bool zipper_prepare_new_file(struct zipper *z) {
+static bool zipper_prepare_new_file(struct zipper *z, bool forwards) {
     z->ar.is = false;
 
     if ( z->ar.initialized ) {
@@ -114,7 +115,7 @@ static bool zipper_prepare_new_file(struct zipper *z) {
     }
 
     if ( ft_file_is_archive(z->path) ) {
-        if ( !zipper_prepare_new_archive(z) )
+        if ( !zipper_prepare_new_archive(z, forwards) )
             return false;
 
         if ( !zipper_load_archive_image(z) )
@@ -200,7 +201,7 @@ struct zipper * zipper_create(char *path) {
 
     zipper_dir_down_check(z, true);
 
-    if ( !zipper_prepare_new_file(z) )
+    if ( !zipper_prepare_new_file(z, true) )
         errx(1, "fixme 54982192");
 
     return z;
@@ -271,7 +272,7 @@ bool zipper_next(struct zipper *z) {
         return zipper_next(z);
     }
 
-    if ( !zipper_prepare_new_file(z) ) {
+    if ( !zipper_prepare_new_file(z, true) ) {
         // failed to load this file, try the next
         // TODO: goto?
         return zipper_next(z);
@@ -345,15 +346,10 @@ bool zipper_prev(struct zipper *z) {
         return zipper_prev(z);
     }
 
-    if ( !zipper_prepare_new_file(z) ) {
+    if ( !zipper_prepare_new_file(z, false) ) {
         // failed to load this file, try the previous
         // TODO: goto?
         return zipper_prev(z);
-    }
-
-    // go to the end of an archive if we went into one
-    if ( z->ar.is ) {
-        z->ar.pos = z->ar.maplen-1;
     }
 
     return true;
