@@ -75,7 +75,7 @@ bool image_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
 
                     xleft--;
                     if ( xleft == 0 && in_x < IMAGE_SLICE_SIZE-1 ) {
-                        memset(this + (in_x*4+1), 0, IMAGE_SLICE_SIZE-in_x);
+                        memset(this + (in_x*4+1), 0, (IMAGE_SLICE_SIZE-in_x)*4);
                         break;
                     }
                 }
