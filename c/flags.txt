@@ -1,0 +1,20 @@
+ENABLE_LIBJPEG (default)
+    enables support for libjpeg.
+
+ENABLE_GIFLIB (default)
+    enables support for giflib.
+
+ENABLE_PNM (default)
+    enables support for pbm/pgm/ppm files.
+
+ENABLE_SDL_IMAGE
+    enables support for the SDL_image library.
+
+DEBUG_DRAW_SLICES
+    draws slice boundaries on image display.
+
+DEBUG_GC
+    spews more info about the gc as it runs.
+
+DEBUG_RANDOMIZE_SLICES
+    randomize the memory in the cpuimage slices before loading the image (for uninitialized data detection)
