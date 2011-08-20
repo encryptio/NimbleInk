@@ -4,6 +4,7 @@
 #include "archive-unrar.h"
 
 #include "filetype.h"
+#include "english.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +13,7 @@
 #include <ctype.h>
 
 static bool archive_load_toc(struct archive *ar);
+static void archive_make_map(struct archive *ar);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -49,10 +51,12 @@ struct archive * archive_create(char *path) {
         return false;
     }
 
-    if ( archive_load_toc(ar) )
+    if ( archive_load_toc(ar) ) {
+        archive_make_map(ar);
         return ar;
-    else
+    } else {
         return NULL;
+    }
 }
 
 bool archive_load_all(struct archive *ar) {
@@ -123,6 +127,28 @@ bool archive_load_all_from_command(struct archive *ar, char *cmd) {
     pclose(fh);
 
     return ret;
+}
+
+#ifdef __gnu_linux__
+static int archive_compare_files(const void *a, const void *b, void *thunk) {
+#else
+// OSX, *BSD
+static int archive_compare_files(void *thunk, const void *a, const void *b) {
+#endif
+    return english_compare_natural((((struct archive *)thunk)->names[*((int*)a)]),
+                                   (((struct archive *)thunk)->names[*((int*)b)]));
+}
+
+static void archive_make_map(struct archive *ar) {
+    for (int i = 0; i < ar->files; i++)
+        ar->map[i] = i;
+
+#ifdef __gnu_linux__
+    qsort_r(&(ar->map), ar->files, sizeof(int), archive_compare_files, (void*)ar);
+#else
+    // OSX, *BSD
+    qsort_r(&(ar->map), ar->files, sizeof(int), (void*)ar, archive_compare_files);
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -26,6 +26,8 @@ struct archive {
     int sizes[ARCHIVE_MAX_FILES];
     void *data[ARCHIVE_MAX_FILES];
 
+    int map[ARCHIVE_MAX_FILES];
+
     int files;
     int files_loaded;
 };

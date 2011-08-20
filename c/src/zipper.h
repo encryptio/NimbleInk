@@ -19,8 +19,6 @@ struct zipper {
     struct {
         bool is;
         struct archive *ar;
-        int map[ARCHIVE_MAX_FILES];
-        int maplen;
         int pos;
     } ar;
 };

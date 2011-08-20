@@ -14,16 +14,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef __gnu_linux__
-static int zipper_compare_files(const void *a, const void *b, void *thunk) {
-#else
-// OSX, *BSD
-static int zipper_compare_files(void *thunk, const void *a, const void *b) {
-#endif
-    return english_compare_natural((((struct zipper *)thunk)->ar.ar->names[*((int*)a)]),
-                                   (((struct zipper *)thunk)->ar.ar->names[*((int*)b)]));
-}
-
 static void zipper_replace_cpuimage(struct zipper *z, struct cpuimage *cpu) {
     if ( z->gl ) {
         glimage_decr_q(z->gl);
@@ -31,15 +21,15 @@ static void zipper_replace_cpuimage(struct zipper *z, struct cpuimage *cpu) {
     }
 
     if ( (z->gl = glimage_from_cpuimage(cpu)) == NULL )
-        errx(1, "Couldn't put image '%s' from archive '%s' into OpenGL", z->ar.ar->names[z->ar.map[z->ar.pos]], z->path);
+        errx(1, "Couldn't put image '%s' from archive '%s' into OpenGL", z->ar.ar->names[z->ar.ar->map[z->ar.pos]], z->path);
     glimage_incr(z->gl);
 }
 
 static bool zipper_load_archive_image(struct zipper *z) {
     struct cpuimage *cpu;
-    if ( (cpu = cpuimage_from_ram(z->ar.ar->data[ z->ar.map[z->ar.pos]],
-                                  z->ar.ar->sizes[z->ar.map[z->ar.pos]])) == NULL ) {
-        warnx("Couldn't load image '%s' from archive '%s'", z->ar.ar->names[z->ar.map[z->ar.pos]], z->path);
+    if ( (cpu = cpuimage_from_ram(z->ar.ar->data[ z->ar.ar->map[z->ar.pos]],
+                                  z->ar.ar->sizes[z->ar.ar->map[z->ar.pos]])) == NULL ) {
+        warnx("Couldn't load image '%s' from archive '%s'", z->ar.ar->names[z->ar.ar->map[z->ar.pos]], z->path);
         return false;
     }
 
@@ -81,21 +71,7 @@ static bool zipper_prepare_new_archive(struct zipper *z, bool forwards) {
 
     archive_incr(z->ar.ar);
 
-    // ignore non-image files
-    int j = 0;
-    for (int i = 0; i < z->ar.ar->files; i++)
-        if ( z->ar.ar->sizes[i] >= FILETYPE_MAGIC_BYTES && ft_is_image(z->ar.ar->data[i]) )
-            z->ar.map[j++] = i;
-
-    z->ar.maplen = j;
-    z->ar.pos = forwards ? 0 : z->ar.maplen-1;
-
-#ifdef __gnu_linux__
-    qsort_r(&(z->ar.map), z->ar.maplen, sizeof(int), zipper_compare_files, (void*)z);
-#else
-    // OSX, *BSD
-    qsort_r(&(z->ar.map), z->ar.maplen, sizeof(int), (void*)z, zipper_compare_files);
-#endif
+    z->ar.pos = forwards ? 0 : z->ar.ar->files-1;
 
     return true;
 }
@@ -204,7 +180,7 @@ struct zipper * zipper_create(char *path) {
 bool zipper_next(struct zipper *z) {
     // special case: move forward in an archive
     if ( z->ar.ar ) {
-        if ( z->ar.pos+1 < z->ar.maplen ) {
+        if ( z->ar.pos+1 < z->ar.ar->files ) {
             z->ar.pos++;
             zipper_load_archive_image(z); // ignore failures, let the display show a broken image
             return true;
