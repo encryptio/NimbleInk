@@ -3,21 +3,22 @@
 
 #include "archive.h"
 #include "image.h"
+#include "reference.h"
 
 #include <stdbool.h>
 
 struct zipper {
+    int refcount;
+
     int updepth; // number of levels we're allowed to go up before reaching the "end"
 
     char path[MAX_PATH_LENGTH];
 
-    bool image_initialized;
-    struct glimage image;
+    struct glimage *gl;
 
     struct {
         bool is;
-        bool initialized;
-        struct archive ar;
+        struct archive *ar;
         int map[ARCHIVE_MAX_FILES];
         int maplen;
         int pos;
@@ -44,6 +45,11 @@ bool zipper_next(struct zipper *z);
  */
 bool zipper_prev(struct zipper *z);
 
-void zipper_free(struct zipper *z);
+void zipper_incr(void *z);
+void zipper_decr(void *z);
+
+static inline void zipper_decr_q(struct zipper *z) {
+    ref_queue_decr((void*)(z), zipper_decr);
+}
 
 #endif

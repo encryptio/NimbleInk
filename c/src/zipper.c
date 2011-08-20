@@ -20,83 +20,77 @@ static int zipper_compare_files(const void *a, const void *b, void *thunk) {
 // OSX, *BSD
 static int zipper_compare_files(void *thunk, const void *a, const void *b) {
 #endif
-    return english_compare_natural((((struct zipper *)thunk)->ar.ar.names[*((int*)a)]),
-                                   (((struct zipper *)thunk)->ar.ar.names[*((int*)b)]));
+    return english_compare_natural((((struct zipper *)thunk)->ar.ar->names[*((int*)a)]),
+                                   (((struct zipper *)thunk)->ar.ar->names[*((int*)b)]));
 }
 
 static void zipper_replace_cpuimage(struct zipper *z, struct cpuimage *cpu) {
-    if ( z->image_initialized ) {
-        z->image_initialized = false;
-        image_gl_destroy(&(z->image));
+    if ( z->gl ) {
+        glimage_decr_q(z->gl);
+        z->gl = NULL;
     }
 
-    if ( !image_cpu2gl(cpu, &(z->image)) )
-        errx(1, "Couldn't put image '%s' from archive '%s' into OpenGL", z->ar.ar.names[z->ar.map[z->ar.pos]], z->path);
-
-    z->image_initialized = true;
+    if ( (z->gl = glimage_from_cpuimage(cpu)) == NULL )
+        errx(1, "Couldn't put image '%s' from archive '%s' into OpenGL", z->ar.ar->names[z->ar.map[z->ar.pos]], z->path);
+    glimage_incr(z->gl);
 }
 
 static bool zipper_load_archive_image(struct zipper *z) {
-    struct cpuimage cpu;
-    if ( !image_load_from_ram(z->ar.ar.data[ z->ar.map[z->ar.pos]],
-                             z->ar.ar.sizes[z->ar.map[z->ar.pos]], &cpu) ) {
-        warnx("Couldn't load image '%s' from archive '%s'", z->ar.ar.names[z->ar.map[z->ar.pos]], z->path);
+    struct cpuimage *cpu;
+    if ( (cpu = cpuimage_from_ram(z->ar.ar->data[ z->ar.map[z->ar.pos]],
+                                  z->ar.ar->sizes[z->ar.map[z->ar.pos]])) == NULL ) {
+        warnx("Couldn't load image '%s' from archive '%s'", z->ar.ar->names[z->ar.map[z->ar.pos]], z->path);
         return false;
     }
 
-    zipper_replace_cpuimage(z, &cpu);
+    zipper_replace_cpuimage(z, cpu);
 
-    image_cpu_destroy(&cpu);
     return true;
 }
 
 static bool zipper_load_direct_image(struct zipper *z) {
-    struct cpuimage cpu;
-    if ( !image_load_from_disk(z->path, &cpu) ) {
+    struct cpuimage *cpu;
+    if ( (cpu = cpuimage_from_disk(z->path)) == NULL ) {
         warnx("Couldn't load image '%s'", z->path);
         return false;
     }
 
-    zipper_replace_cpuimage(z, &cpu);
+    zipper_replace_cpuimage(z, cpu);
 
-    image_cpu_destroy(&cpu);
     return true;
 }
 
 static bool zipper_prepare_new_archive(struct zipper *z, bool forwards) {
-    if ( z->ar.initialized ) {
-        z->ar.initialized = false;
-        archive_destroy(&(z->ar.ar));
+    if ( z->ar.ar ) {
+        archive_decr_q(z->ar.ar);
+        z->ar.ar = NULL;
     }
 
-    if ( !archive_prepare(z->path, &(z->ar.ar)) ) {
+    if ( (z->ar.ar = archive_create(z->path)) == NULL ) {
         warnx("Couldn't prepare %s as an archive", z->path);
         return false;
     }
 
-    z->ar.initialized = true;
-
-    if ( !archive_load_all(&(z->ar.ar)) ) {
+    if ( !archive_load_all(z->ar.ar) ) {
         warnx("Couldn't load all data from archive %s", z->path);
+        z->ar.ar = NULL;
         return false;
     }
 
     z->ar.is = true;
 
+    archive_incr(z->ar.ar);
+
     // ignore non-image files
     int j = 0;
-    for (int i = 0; i < z->ar.ar.files; i++)
-        if ( z->ar.ar.sizes[i] >= FILETYPE_MAGIC_BYTES && ft_is_image(z->ar.ar.data[i]) )
+    for (int i = 0; i < z->ar.ar->files; i++)
+        if ( z->ar.ar->sizes[i] >= FILETYPE_MAGIC_BYTES && ft_is_image(z->ar.ar->data[i]) )
             z->ar.map[j++] = i;
 
     z->ar.maplen = j;
-
     z->ar.pos = forwards ? 0 : z->ar.maplen-1;
 
 #ifdef __gnu_linux__
-//extern void qsort_r (void *__base, size_t __nmemb, size_t __size,
-//		     __compar_d_fn_t __compar, void *__arg)
-//  __nonnull ((1, 4));
     qsort_r(&(z->ar.map), z->ar.maplen, sizeof(int), zipper_compare_files, (void*)z);
 #else
     // OSX, *BSD
@@ -107,11 +101,9 @@ static bool zipper_prepare_new_archive(struct zipper *z, bool forwards) {
 }
 
 static bool zipper_prepare_new_file(struct zipper *z, bool forwards) {
-    z->ar.is = false;
-
-    if ( z->ar.initialized ) {
-        z->ar.initialized = false;
-        archive_destroy(&(z->ar.ar));
+    if ( z->ar.ar ) {
+        archive_decr_q(z->ar.ar);
+        z->ar.ar = NULL;
     }
 
     if ( ft_file_is_archive(z->path) ) {
@@ -182,12 +174,12 @@ static void zipper_dir_down_check(struct zipper *z, bool forwards) {
 
 struct zipper * zipper_create(char *path) {
     struct zipper *z;
-    if ( (z = malloc(sizeof(struct zipper))) == NULL )
+    if ( (z = calloc(1, sizeof(struct zipper))) == NULL )
         err(1, "Couldn't malloc space for zipper");
+    z->refcount = 1;
+    zipper_decr_q(z);
 
     z->updepth = 0;
-    z->image_initialized = false;
-    z->ar.initialized = false;
 
     strncpy(z->path, path, MAX_PATH_LENGTH);
     z->path[MAX_PATH_LENGTH-1] = '\0';
@@ -195,8 +187,10 @@ struct zipper * zipper_create(char *path) {
     if ( z->path[strlen(z->path)-1] == '/' ) {
         z->updepth--;
 
-        if ( !zipper_is_dir(z->path) )
-            errx(1, "zipper_create called with trailing slash, but item was not a directory");
+        if ( !zipper_is_dir(z->path) ) {
+            warnx("zipper_create called with trailing slash, but item was not a directory");
+            return NULL;
+        }
     }
 
     zipper_dir_down_check(z, true);
@@ -209,7 +203,7 @@ struct zipper * zipper_create(char *path) {
 
 bool zipper_next(struct zipper *z) {
     // special case: move forward in an archive
-    if ( z->ar.is ) {
+    if ( z->ar.ar ) {
         if ( z->ar.pos+1 < z->ar.maplen ) {
             z->ar.pos++;
             zipper_load_archive_image(z); // ignore failures, let the display show a broken image
@@ -267,23 +261,21 @@ bool zipper_next(struct zipper *z) {
 
     zipper_dir_down_check(z, true);
 
-    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) ) {
+    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) )
         // not a known filetype
         return zipper_next(z);
-    }
 
-    if ( !zipper_prepare_new_file(z, true) ) {
+    if ( !zipper_prepare_new_file(z, true) )
         // failed to load this file, try the next
         // TODO: goto?
         return zipper_next(z);
-    }
 
     return true;
 }
 
 bool zipper_prev(struct zipper *z) {
     // special case: move backward in an archive
-    if ( z->ar.is ) {
+    if ( z->ar.ar ) {
         if ( z->ar.pos > 0 ) {
             z->ar.pos--;
             zipper_load_archive_image(z); // ignore failures, let the display show a broken image
@@ -341,21 +333,28 @@ bool zipper_prev(struct zipper *z) {
 
     zipper_dir_down_check(z, false);
 
-    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) ) {
+    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) )
         // not a known filetype
         return zipper_prev(z);
-    }
 
-    if ( !zipper_prepare_new_file(z, false) ) {
+    if ( !zipper_prepare_new_file(z, false) )
         // failed to load this file, try the previous
         // TODO: goto?
         return zipper_prev(z);
-    }
 
     return true;
 }
 
-void zipper_free(struct zipper *z) {
-    errx(1, "not implemented");
+static void zipper_free(struct zipper *z) {
+    errx(1, "zipper_free not implemented");
+}
+
+void zipper_incr(void *z) {
+    ((struct zipper *)z)->refcount++;
+}
+
+void zipper_decr(void *z) {
+    if ( !( --((struct zipper *) z)->refcount ) )
+        zipper_free(z);
 }
 

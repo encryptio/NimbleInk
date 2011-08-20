@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 // TODO: ew
-bool image_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
+bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
     uint32_t width, height, maxval, version;
     uint8_t *ptr = (uint8_t*) orig;
 
@@ -84,7 +84,7 @@ bool image_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
     // Prepare image container
 
     // XXX: on error later, free this
-    if ( !image_setup_cpu_wh(i, width, height) ) {
+    if ( !cpuimage_setup_cpu_wh(i, width, height) ) {
         warnx("Couldn't set w/h for PNM file\n");
         return false;
     }

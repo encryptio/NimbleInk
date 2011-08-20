@@ -1,10 +1,5 @@
 #include "image.h"
 
-#include "image-libjpeg.h"
-#include "image-giflib.h"
-#include "image-sdl_image.h"
-#include "image-pnm.h"
-
 #include "archive.h"
 #include "filetype.h"
 
@@ -19,74 +14,14 @@
 
 bool image_multidraw = true;
 
-bool image_load_from_disk(char *path, struct cpuimage *i) {
-    FILE *fh = fopen(path, "rb");
-
-    uint8_t *buf;
-    int alloced = 8192;
-    int used = 0;
-
-    if ( (buf = malloc(alloced)) == NULL )
-        err(1, "Couldn't allocate space for image load from disk");
-
-    size_t did_read;
-    while ( (did_read = fread(buf+used, 1, alloced-used, fh)) > 0 ) {
-        used += did_read;
-        if ( used == alloced ) {
-            alloced *= 2;
-
-            if ( alloced > IMAGE_MAX_FILESIZE ) {
-                warnx("Image in %s is too big to be loaded (max size %d bytes)", path, IMAGE_MAX_FILESIZE);
-                fclose(fh);
-                free(buf);
-                return false;
-            }
-
-            if ( (buf = realloc(buf, alloced)) == NULL )
-                err(1, "Couldn't realloc space for image load from disk");
-        }
-    }
-
-    fclose(fh);
-
-    bool ret = image_load_from_ram(buf, used, i);
-
-    free(buf);
-
-    return ret;
-}
-
-bool image_load_from_ram(void *ptr, int len, struct cpuimage *i) {
+struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
     uint32_t start = SDL_GetTicks();
 
-    bool ret = false;
-
-#if ENABLE_LIBJPEG
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_jpg((uint8_t*) ptr) )
-        ret = image_load_from_ram_libjpeg(ptr, len, i);
-#endif
-#if ENABLE_GIFLIB
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_gif((uint8_t*) ptr) )
-        ret = image_load_from_ram_giflib(ptr, len, i);
-#endif
-#if ENABLE_PNM
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_pnm((uint8_t*) ptr) )
-        ret = image_load_from_ram_pnm(ptr, len, i);
-#endif
-#if ENABLE_SDL_IMAGE
-    if ( !ret )
-        ret = image_load_from_ram_sdl_image(ptr, len, i);
-#endif
-
-    i->load_time = SDL_GetTicks() - start;
-
-    snprintf(i->path, MAX_PATH_LENGTH, "Address %p length %d", ptr, len);
-
-    return ret;
-}
-
-bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
-    uint32_t start = SDL_GetTicks();
+    struct glimage *gl;
+    if ( (gl = calloc(1, sizeof(struct glimage))) == NULL )
+        err(1, "Couldn't allocate space for glimage");
+    gl->refcount = 1;
+    glimage_decr_q(gl);
 
     // copy the unchanged parts of the structure
     memcpy(gl->path, i->path, MAX_PATH_LENGTH);
@@ -94,7 +29,6 @@ bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
     gl->h = i->h;
     gl->s_w = i->s_w;
     gl->s_h = i->s_h;
-    gl->load_time = i->load_time;
     gl->cpu_time = i->cpu_time;
 
     // create the texture IDs
@@ -121,18 +55,11 @@ bool image_cpu2gl(struct cpuimage *i, struct glimage *gl) {
     }
 
     gl->gl_time = SDL_GetTicks() - start;
-    return true;
+
+    return gl;
 }
 
-void image_gl_destroy(struct glimage *gl) {
-    glDeleteTextures(gl->s_w * gl->s_h, (GLuint*) &(gl->slices));
-}
-
-void image_cpu_destroy(struct cpuimage *i) {
-    free(i->slices);
-}
-
-void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
+void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
     int slice = 0;
     float x_step = (x2-x1)/(gl->s_w - ((float) gl->s_w*IMAGE_SLICE_SIZE - gl->w)/IMAGE_SLICE_SIZE);
     float y_step = (y2-y1)/(gl->s_h - ((float) gl->s_h*IMAGE_SLICE_SIZE - gl->h)/IMAGE_SLICE_SIZE);
@@ -201,25 +128,17 @@ void image_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
     }
 }
 
-bool image_setup_cpu_wh(struct cpuimage *i, int w, int h) {
-    i->w = w;
-    i->h = h;
-    i->s_w = (w + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
-    i->s_h = (h + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
+static void glimage_free(struct glimage *gl) {
+    glDeleteTextures(gl->s_w * gl->s_h, (GLuint*) &(gl->slices));
+    free(gl);
+}
 
-    if ( i->s_w * i->s_h > IMAGE_MAX_SLICES ) {
-        warnx("Too many slices. wanted %d (=%dx%d) slices but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, IMAGE_MAX_SLICES);
-        return false;
-    }
+void glimage_incr(void *gl) {
+    ((struct glimage *)gl)->refcount++;
+}
 
-    if ( (i->slices = malloc(4 * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
-        err(1, "Couldn't malloc space for image");
-
-#if DEBUG_RANDOMIZE_SLICES
-    for (int j = 0; j < 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h/sizeof(long); j++)
-        ((long*) i->slices)[j] = random();
-#endif
-
-    return true;
+void glimage_decr(void *gl) {
+    if ( !( --((struct glimage *) gl)->refcount ) )
+        glimage_free((struct glimage *) gl);
 }
 

@@ -1,6 +1,6 @@
 #if ENABLE_SDL_IMAGE
 
-#include "image.h"
+#include "image-sdl_image.h"
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -11,9 +11,9 @@
 #include <err.h>
 #include <inttypes.h>
 
-static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i);
+static bool cpuimage_load_from_surface(SDL_Surface *surface, struct cpuimage *i);
 
-bool image_load_from_ram_sdl_image(void *ptr, int len, struct cpuimage *i) {
+bool cpuimage_load_from_ram_sdl_image(void *ptr, int len, struct cpuimage *i) {
     SDL_Surface *surface;
 
     if ( !(surface = IMG_Load_RW(SDL_RWFromMem(ptr, len), 1)) ) {
@@ -21,27 +21,27 @@ bool image_load_from_ram_sdl_image(void *ptr, int len, struct cpuimage *i) {
         return false;
     }
 
-    bool ret = image_load_from_surface(surface, i);
+    bool ret = cpuimage_load_from_surface(surface, i);
 
     SDL_FreeSurface(surface);
 
     return ret;
 }
 
-static bool image_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
+static bool cpuimage_load_from_surface(SDL_Surface *surface, struct cpuimage *i) {
     GLint nOfColors = surface->format->BytesPerPixel;
 
     if ( nOfColors != 4 && nOfColors != 3 ) {
         SDL_Surface *new = SDL_DisplayFormatAlpha(surface);
         if ( !new )
             errx(1, "Couldn't convert surface to display format: %s", SDL_GetError());
-        bool ret = image_load_from_surface(new, i);
+        bool ret = cpuimage_load_from_surface(new, i);
         SDL_FreeSurface(new);
         return ret;
     }
 
     i->is_bgra = !(surface->format->Rmask == 0x000000ff);
-    if ( !image_setup_cpu_wh(i, surface->w, surface->h) )
+    if ( !cpuimage_setup_cpu_wh(i, surface->w, surface->h) )
         return false;
 
     for (int sy = 0; sy < i->s_h; sy++)

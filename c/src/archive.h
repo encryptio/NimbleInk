@@ -2,7 +2,9 @@
 #define __ARCHIVE_H__
 
 #include "path.h"
+#include "reference.h"
 
+#include <stdio.h>
 #include <stdbool.h>
 
 #define ARCHIVE_MAX_FILES 5000
@@ -14,6 +16,8 @@ enum archive_type {
 };
 
 struct archive {
+    int refcount;
+
     char path[MAX_PATH_LENGTH];
     enum archive_type type;
 
@@ -26,8 +30,18 @@ struct archive {
     int files_loaded;
 };
 
-bool archive_prepare(char *path, struct archive *ar);
+struct archive * archive_create(char *path);
 bool archive_load_all(struct archive *ar);
-void archive_destroy(struct archive *ar);
+
+void archive_incr(void *ar);
+void archive_decr(void *ar);
+
+static inline void archive_decr_q(struct archive *ar) {
+    ref_queue_decr((void*)(ar), archive_decr);
+}
+
+// Private
+bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh);
+bool archive_load_all_from_command(struct archive *ar, char *cmd);
 
 #endif

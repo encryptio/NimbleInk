@@ -1,19 +1,25 @@
 #include "image.h"
+#include "reference.h"
 
 #include <stdio.h>
 #include <err.h>
 #include <inttypes.h>
 
 int main(int argc, char **argv) {
-    struct cpuimage cpu;
+    struct cpuimage *cpu;
 
-    if ( !image_load_from_disk(argv[1], &cpu) )
+    ref_release_pool();
+
+    if ( (cpu = cpuimage_from_disk(argv[1])) == NULL )
         errx(1, "Couldn't load image from disk");
+    cpuimage_incr(cpu);
+
+    ref_release_pool();
 
     char path[50];
-    for (int sx = 0; sx < cpu.s_w; sx++)
-        for (int sy = 0; sy < cpu.s_h; sy++) {
-            uint8_t *slicebase = (uint8_t*)cpu.slices + (sx+sy*cpu.s_w)*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*4;
+    for (int sx = 0; sx < cpu->s_w; sx++)
+        for (int sy = 0; sy < cpu->s_h; sy++) {
+            uint8_t *slicebase = (uint8_t*)cpu->slices + (sx+sy*cpu->s_w)*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*4;
 
             snprintf(path, 50, "image-%d.%d.ppm", sx, sy);
 
@@ -25,7 +31,7 @@ int main(int argc, char **argv) {
             int y = 0;
             for (int i = 0; i < IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE; i++) {
                 uint8_t r,g,b,a;
-                if ( cpu.is_bgra ) {
+                if ( cpu->is_bgra ) {
                     r = slicebase[i*4+2];
                     g = slicebase[i*4+1];
                     b = slicebase[i*4  ];
@@ -54,6 +60,9 @@ int main(int argc, char **argv) {
 
             fclose(fh);
         }
+
+    cpuimage_decr_q(cpu);
+    ref_release_pool();
 
     return 0;
 }

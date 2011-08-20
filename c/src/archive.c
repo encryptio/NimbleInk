@@ -1,5 +1,8 @@
 #include "archive.h"
 
+#include "archive-unzip.h"
+#include "archive-unrar.h"
+
 #include "filetype.h"
 
 #include <stdio.h>
@@ -9,14 +12,16 @@
 #include <ctype.h>
 
 static bool archive_load_toc(struct archive *ar);
-static bool archive_load_toc_zip(struct archive *ar);
-static bool archive_load_toc_rar(struct archive *ar);
-static bool archive_load_all_zip(struct archive *ar);
-static bool archive_load_all_rar(struct archive *ar);
 
 //////////////////////////////////////////////////////////////////////
 
-bool archive_prepare(char *path, struct archive *ar) {
+struct archive * archive_create(char *path) {
+    struct archive *ar;
+    if ( (ar = calloc(1, sizeof(struct archive))) == NULL )
+        err(1, "Couldn't allocate space for archive");
+    ar->refcount = 1;
+    archive_decr_q(ar);
+
     strncpy(ar->path, path, MAX_PATH_LENGTH);
     ar->path[MAX_PATH_LENGTH-1] = '\0';
 
@@ -44,10 +49,10 @@ bool archive_prepare(char *path, struct archive *ar) {
         return false;
     }
 
-    ar->files = 0;
-    ar->files_loaded = 0;
-
-    return archive_load_toc(ar);
+    if ( archive_load_toc(ar) )
+        return ar;
+    else
+        return NULL;
 }
 
 bool archive_load_all(struct archive *ar) {
@@ -61,55 +66,6 @@ bool archive_load_all(struct archive *ar) {
     }
 }
 
-void archive_destroy(struct archive *ar) {
-    for (int i = 0; i < ar->files; i++) {
-        if ( ar->data[i] ) {
-            ar->files_loaded--;
-            free(ar->data[i]);
-            ar->data[i] = NULL;
-        }
-    }
-}
-
-//////////////////////////////////////////////////////////////////////
-
-static void make_command(char *prefix, char *filename, char *output, int n) {
-    strncpy(output, prefix, n);
-    output[n-1] = '\0';
-
-    if ( strlen(output) < n-2 ) {
-        output[strlen(output)+1] = '\0';
-        output[strlen(output)  ] = '\'';
-    } else {
-        return;
-    }
-
-    int j = 0;
-    for (int i = strlen(output); i < n-4;) {
-        char ch = filename[j++];
-        switch ( ch ) {
-            case '\0':
-                output[i++] = '\'';
-                output[i++] = '\0';
-                i = 1000;
-                break;
-
-            case '\'':
-                output[i++] = '\'';
-                output[i++] = '\\';
-                output[i++] = '\'';
-                output[i++] = '\'';
-                break;
-
-            default:
-                output[i++] = ch;
-                break;
-        }
-    }
-}
-
-//////////////////////////////////////////////////////////////////////
-
 static bool archive_load_toc(struct archive *ar) {
     switch ( ar->type ) {
         case archive_zip:
@@ -121,165 +77,9 @@ static bool archive_load_toc(struct archive *ar) {
     }
 }
 
-#define EXPECT(condition) if ( !(condition) ) { \
-            warnx("Condition failed in readline: %s", #condition); \
-            continue; \
-        }
-
-static bool archive_load_toc_zip(struct archive *ar) {
-    char cmd[1000];
-    make_command("unzip -l -qq ", ar->path, cmd, 1000);
-
-    FILE *fh = popen(cmd, "r");
-    if ( fh == NULL )
-        err(1, "Couldn't popen command: %s", cmd);
-
-    char line[1000];
-    while ( fgets(line, 1000, fh) ) {
-        // e.g.
-        //    396385  2011-01-10 11:34   Yumekui_Merry_v01_p026.png
-
-        char *c = line;
-
-        while ( isspace(*c) ) c++;
-
-        long length = strtol(c, &c, 10);
-
-        while ( isspace(*c) ) c++;
-
-        if ( length == 0 )
-            continue; // silently
-
-        EXPECT(length > 0);
-
-        EXPECT(isdigit(*c++));
-        EXPECT(isdigit(*c++));
-        while ( isdigit(*c) ) c++; // some versions use 2-digit years, some 4-digit
-        EXPECT(*c++ == '-');
-        EXPECT(isdigit(*c++));
-        EXPECT(isdigit(*c++));
-        EXPECT(*c++ == '-');
-        EXPECT(isdigit(*c++));
-        EXPECT(isdigit(*c++));
-
-        while ( isspace(*c) ) c++;
-
-        while ( isdigit(*c) ) c++;
-        EXPECT(*c++ == ':');
-        while ( isdigit(*c) ) c++;
-
-        while ( isspace(*c) ) c++;
-
-        EXPECT(!isspace(*c) && *c != '\0');
-
-        // all conditions satisfied, and we've reached the filename. time to read it into the directory.
-        
-        ar->sizes[ar->files] = length;
-        int n = 0;
-        while ( *c != '\0' && *c != '\n' ) {
-            ar->names[ar->files][n++] = *c++;
-            if ( n >= MAX_PATH_LENGTH-1 )
-                break;
-        }
-        ar->names[ar->files][n] = '\0';
-        ar->data[ar->files] = NULL;
-
-        ar->files++;
-    }
-
-    pclose(fh);
-
-    return ar->files ? true : false;
-}
-
-static bool archive_load_toc_rar(struct archive *ar) {
-    char cmd[1000];
-    make_command("unrar v -kb -p- -cfg- -c- ", ar->path, cmd, 1000);
-
-    FILE *fh = popen(cmd, "r");
-    if ( fh == NULL )
-        err(1, "Couldn't popen command: %s", cmd);
-
-    char line[1000];
-
-    // skip until the starting -----...
-    while ( fgets(line, 1000, fh) )
-        if ( line[0] == '-' )
-            break;
-
-    char filename[MAX_PATH_LENGTH];
-    while ( fgets(line, 1000, fh) ) {
-        // end of listing
-        if ( line[0] == '-' )
-            break;
-
-        // e.g.
-        //  Transmetropolitan_14_p10.jpg
-        //       428038   428038 100% 18-08-04 21:16  .....A.   4E9A34CD m0d 2.0
-
-        char *c = line;
-        while ( isspace(*c) ) c++;
-
-        // filename on the first line, copy it out
-        int i;
-        for (i = 0; i < MAX_PATH_LENGTH-1; i++) {
-            if ( *c == '\0' || *c == '\n' )
-                break;
-
-            filename[i] = *c++;
-        }
-
-        filename[i] = '\0';
-
-        // next, the file statistics
-        if ( !fgets(line, 1000, fh) )
-            break;
-
-        if ( line[0] == '-' )
-            break;
-
-        c = line;
-        while ( isspace(*c) ) c++;
-        long size = strtol(c, &c, 10);
-        while ( isspace(*c) ) c++;
-        long packed = strtol(c, &c, 10);
-        while ( isspace(*c) ) c++;
-        while ( isdigit(*c) ) c++; // percentage
-
-        if ( *c != '%' ) {
-            warnx("eek");
-            continue;
-        }
-
-        // files can get bigger if compressed incorrectly; however, if the
-        // difference is too big, we've probably made a mistake.
-        if ( packed*0.9 > size ) {
-            warnx("eeek");
-            continue;
-        }
-
-        // ignore empty files
-        if ( size == 0 )
-            continue;
-
-        for (i = 0; i < strlen(filename)+1; i++)
-            ar->names[ar->files][i] = filename[i];
-        ar->sizes[ar->files] = size;
-        ar->data[ar->files] = NULL;
-
-        fprintf(stderr, "got file: %d bytes, filename \"%s\"\n", ar->sizes[ar->files], ar->names[ar->files]);
-
-        ar->files++;
-    }
-
-    return ar->files ? true : false;
-}
-
-#undef EXPECT
-
 //////////////////////////////////////////////////////////////////////
 
-static bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
+bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
     for (int i = 0; i < ar->files; i++) {
         printf("loading %d bytes for file %d, name \"%s\"\n", ar->sizes[i], i, ar->names[i]);
 
@@ -311,7 +111,7 @@ static bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
     return true;
 }
 
-static bool archive_load_all_from_command(struct archive *ar, char *cmd) {
+bool archive_load_all_from_command(struct archive *ar, char *cmd) {
     FILE *fh = popen(cmd, "r");
     if ( fh == NULL ) {
         warn("Couldn't popen command: %s", cmd);
@@ -325,16 +125,25 @@ static bool archive_load_all_from_command(struct archive *ar, char *cmd) {
     return ret;
 }
 
-static bool archive_load_all_zip(struct archive *ar) {
-    char cmd[1000];
-    make_command("unzip -p -qq ", ar->path, cmd, 1000);
-    return archive_load_all_from_command(ar, cmd);
+//////////////////////////////////////////////////////////////////////
+
+static void archive_free(struct archive *ar) {
+    for (int i = 0; i < ar->files; i++)
+        if ( ar->data[i] ) {
+            ar->files_loaded--;
+            free(ar->data[i]);
+            ar->data[i] = NULL;
+        }
+
+    free(ar);
 }
 
-static bool archive_load_all_rar(struct archive *ar) {
-    char cmd[1000];
-    make_command("unrar p -kb -p- -cfg- -c- -idcdpq ", ar->path, cmd, 1000);
-    return archive_load_all_from_command(ar, cmd);
+void archive_incr(void *ar) {
+    ((struct archive *)ar)->refcount++;
 }
 
+void archive_decr(void *ar) {
+    if ( !( --((struct archive *) ar)->refcount ) )
+        archive_free((struct archive *) ar);
+}
 

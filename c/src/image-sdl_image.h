@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-bool image_load_from_ram_sdl_image(void *ptr, int len, struct cpuimage *i);
+bool cpuimage_load_from_ram_sdl_image(void *ptr, int len, struct cpuimage *i);
 
 #endif /* ENABLE_SDL_IMAGE */
 

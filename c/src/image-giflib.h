@@ -7,8 +7,8 @@
 
 #include <stdbool.h>
 
-bool image_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i);
+bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i);
 
-#endif
+#endif /* ENABLE_GIFLIB */
 
 #endif

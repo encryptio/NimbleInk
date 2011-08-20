@@ -15,7 +15,7 @@
 // note: this code uses stdbool definitions for the jpeg booleans and
 // assumes they are source compatible
 
-bool image_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
+bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
 
@@ -29,7 +29,7 @@ bool image_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
 
     jpeg_read_header(&cinfo, true);
 
-    if ( !image_setup_cpu_wh(i, cinfo.image_width, cinfo.image_height) ) {
+    if ( !cpuimage_setup_cpu_wh(i, cinfo.image_width, cinfo.image_height) ) {
         warn("Couldn't setup cpuimage");
         goto DESTROY;
     }

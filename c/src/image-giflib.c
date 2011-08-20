@@ -25,7 +25,7 @@ static int image_giflib_read(GifFileType *gif, GifByteType *into, int want) {
     return got;
 }
 
-bool image_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
+bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
     struct gif_reading_status ex = { ptr, len, 0 };
     bool ret = false;
 
@@ -43,7 +43,7 @@ bool image_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
         goto DESTROY;
     }
 
-    if ( !image_setup_cpu_wh(i, gif->SWidth, gif->SHeight) ) {
+    if ( !cpuimage_setup_cpu_wh(i, gif->SWidth, gif->SHeight) ) {
         warnx("Couldn't set w/h for gif file\n");
         goto DESTROY;
     }
