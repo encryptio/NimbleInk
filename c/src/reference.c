@@ -42,10 +42,10 @@ void ref_release_pool(void) {
 
 #if DEBUG_GC
     fprintf(stderr, "[gc] releasing %d objects\n", ref_decr_queue_used);
+    int thought = ref_decr_queue_used;
 #endif
 
     int released = 0;
-    int thought = ref_decr_queue_used;
 
     // release in order that they were queued
     // also be careful to handle calls to ref_queue_decr while this is happening
