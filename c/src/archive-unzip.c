@@ -89,3 +89,12 @@ bool archive_load_all_zip(struct archive *ar) {
     return archive_load_all_from_command(ar, cmd);
 }
 
+bool archive_load_single_zip(struct archive *ar, int which) {
+    char cmd[1000];
+    strcpy(cmd, "unzip -p -qq ");
+    str_append_quoted(cmd, ar->path, 1000);
+    str_append(cmd, " ", 1000);
+    str_append_quoted(cmd, ar->names[which], 1000);
+    return archive_load_single_from_command(ar, cmd, which);
+}
+

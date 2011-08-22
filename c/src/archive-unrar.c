@@ -105,4 +105,12 @@ bool archive_load_all_rar(struct archive *ar) {
     return archive_load_all_from_command(ar, cmd);
 }
 
+bool archive_load_single_rar(struct archive *ar, int which) {
+    char cmd[1000];
+    strcpy(cmd, "unrar p -kb -p- -cfg- -c- -idcpq ");
+    str_append_quoted(cmd, ar->path, 1000);
+    str_append(cmd, " ", 1000);
+    str_append_quoted(cmd, ar->names[which], 1000);
+    return archive_load_single_from_command(ar, cmd, which);
+}
 

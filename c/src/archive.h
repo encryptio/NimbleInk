@@ -46,5 +46,7 @@ static inline void archive_decr_q(struct archive *ar) {
 // Private
 bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh);
 bool archive_load_all_from_command(struct archive *ar, char *cmd);
+bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which);
+bool archive_load_single_from_command(struct archive *ar, char *cmd, int which);
 
 #endif
