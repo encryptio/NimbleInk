@@ -4,7 +4,7 @@ if [ "`uname`" == "Linux" ]; then
     LINK="`sdl-config --libs` -lSDL_image -lGL -lGLU"
     COMPILE="`sdl-config --cflags` -D_GNU_SOURCE"
 elif [ "`uname`" == "Darwin" ]; then
-    LINK="`sdl-config --libs` -framework OpenGL -lSDL_image"
+    LINK="-framework OpenGL /opt/local/lib/libSDL.a /opt/local/lib/libSDL_image.a /opt/local/lib/libSDLmain.a -framework Cocoa -framework CoreAudio -framework AudioUnit -framework IOKit -framework Carbon"
     COMPILE="`sdl-config --cflags`"
 else
     echo "Don't know how to compile on `uname`";
