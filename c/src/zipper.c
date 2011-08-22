@@ -440,12 +440,16 @@ bool zipper_tick_preload(struct zipper *z) {
     // check for image preloading opportunities
     for (int i = 0; i < z->pos_len; i++) {
         if ( !z->pos[i].cpu ) {
+#if DEBUG_PRELOAD
             fprintf(stderr, "[preload] preloading cpuimage for pos=%d (now at %d)\n", i, z->pos_at);
+#endif
             zipper_pos_load_cpuimage(&(z->pos[i]));
             return true;
         }
         if ( !z->pos[i].gl ) {
+#if DEBUG_PRELOAD
             fprintf(stderr, "[preload] preloading glimage for pos=%d (now at %d)\n", i, z->pos_at);
+#endif
             zipper_pos_load_glimage(&(z->pos[i]));
             return true;
         }
@@ -454,11 +458,19 @@ bool zipper_tick_preload(struct zipper *z) {
     // check for zipper_pos preloading opportunities
     if ( ZIPPER_MAX_NUM_POS >= 3 ) {
         if ( z->pos_at == z->pos_len-1 )
-            if ( zipper_add_seek_pos(z, true) )
+            if ( zipper_add_seek_pos(z, true) ) {
+#if DEBUG_PRELOAD
+                fprintf(stderr, "[preload] expanded to the right\n");
+#endif
                 return true;
+            }
         if ( z->pos_at == 0 )
-            if ( zipper_add_seek_pos(z, false) )
+            if ( zipper_add_seek_pos(z, false) ) {
+#if DEBUG_PRELOAD
+                fprintf(stderr, "[preload] expanded to the left\n");
+#endif
                 return true;
+            }
     }
 
     return false;

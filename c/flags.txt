@@ -16,5 +16,8 @@ DEBUG_DRAW_SLICES
 DEBUG_GC
     spews more info about the gc as it runs.
 
+DEBUG_PRELOAD
+    spews information about the preloading activity.
+
 DEBUG_RANDOMIZE_SLICES
     randomize the memory in the cpuimage slices before loading the image (for uninitialized data detection)
