@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
+#include <assert.h>
 
 struct ref_queued_decrement {
     void *obj;
@@ -43,9 +44,9 @@ void ref_release_pool(void) {
 #if DEBUG_GC
     fprintf(stderr, "[gc] releasing %d objects\n", ref_decr_queue_used);
     int thought = ref_decr_queue_used;
-#endif
 
     int released = 0;
+#endif
 
     // release in order that they were queued
     // also be careful to handle calls to ref_queue_decr while this is happening
@@ -56,9 +57,17 @@ void ref_release_pool(void) {
 
         memmove(ref_decr_queue, ref_decr_queue+1, sizeof(struct ref_queued_decrement) * ref_decr_queue_used);
 
+        assert( *((int*)obj) > 0 );
+
+#if DEBUG_GC
+        fprintf(stderr, "[gc] calling decr=%p over %p (refcount=%d)\n", decr, obj, *((int*)obj));
+#endif
+
         decr(obj);
 
+#if DEBUG_GC
         released++;
+#endif
     }
 
 #if DEBUG_GC
