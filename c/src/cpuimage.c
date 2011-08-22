@@ -18,6 +18,8 @@
 
 struct cpuimage * cpuimage_from_disk(char *path) {
     FILE *fh = fopen(path, "rb");
+    if ( !fh )
+        return NULL;
 
     uint8_t *buf;
     int alloced = 8192;
