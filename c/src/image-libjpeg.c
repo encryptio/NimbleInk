@@ -75,7 +75,7 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
 
                     xleft--;
                     if ( xleft == 0 && in_x < IMAGE_SLICE_SIZE-1 ) {
-                        memset(this + (in_x*4+1), 0, (IMAGE_SLICE_SIZE-in_x)*4);
+                        memset(this + (in_x+1)*4, 0, (IMAGE_SLICE_SIZE-in_x-1)*4);
                         break;
                     }
                 }
@@ -84,6 +84,7 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
         }
     }
 
+    // TODO: are we clearing the first row after the image correctly?
     int clear_rows = i->s_h*IMAGE_SLICE_SIZE - y;
     int start_clear_row = IMAGE_SLICE_SIZE - clear_rows;
     int clear_bytes = clear_rows * IMAGE_SLICE_SIZE*4;
