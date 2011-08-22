@@ -49,10 +49,13 @@ float fit_factor(float mw, float mh, float w, float h) {
 
 void set_window_name(struct zipper *z) {
     char name[1000];
-    if ( z->ar.is )
-        snprintf(name, 1000, "%s: (%d/%d) %s", z->path, z->ar.pos+1, z->ar.ar->files, z->ar.ar->names[z->ar.ar->map[z->ar.pos]]);
-    else
-        snprintf(name, 1000, "%s", z->path);
+    struct zipper_pos *pos = &(z->pos[z->pos_at]);
+    if ( pos->ar.is )
+        snprintf(name, 1000, "%s: (%d/%d) %s", pos->path, pos->ar.pos+1, pos->ar.ar->files, pos->ar.ar->names[pos->ar.ar->map[pos->ar.pos]]);
+    else {
+        strncpy(name, pos->path, 1000);
+        pos->path[999] = '\0';
+    }
 
     // sanitize (OSX yells otherwise)
     int mv = 0;
@@ -102,9 +105,9 @@ int main(int argc, char **argv) {
 
     bool running = true;
     bool do_draw = true;
-    bool first_run = true;
+    bool draw_immediately = true;
     while ( running ) {
-        if ( !first_run ) {
+        if ( !draw_immediately ) {
             SDL_Event evt;
             do_draw = true;
             // TODO: SDL 1.3 adds SDL_WaitEventTimeout, which should be used here
@@ -171,16 +174,24 @@ int main(int argc, char **argv) {
 
         if ( do_draw && running ) {
             printf("drawing at %d\n", SDL_GetTicks());
-            float f = fit_factor(z->gl->w, z->gl->h, window_width, window_height);
-            float w = z->gl->w*f;
-            float h = z->gl->h*f;
-            glClear(GL_COLOR_BUFFER_BIT);
-            glimage_draw(z->gl, (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
+            struct glimage *gl = zipper_current_glimage(z);
+            if ( gl ) {
+                float f = fit_factor(gl->w, gl->h, window_width, window_height);
+                float w = gl->w*f;
+                float h = gl->h*f;
+                glClear(GL_COLOR_BUFFER_BIT);
+                glimage_draw(gl, (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
+            } else {
+                fprintf(stderr, "no image to draw\n");
+            }
             SDL_GL_SwapBuffers();
         }
 
+        draw_immediately = true;
+        for (int i = 0; i < 3 && draw_immediately; i++)
+            draw_immediately = zipper_tick_preload(z);
+
         ref_release_pool();
-        first_run = false;
     }
 
     zipper_decr_q(z);

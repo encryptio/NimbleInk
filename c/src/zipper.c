@@ -1,103 +1,17 @@
 #include "zipper.h"
 
-#include "filetype.h"
-#include "archive.h"
 #include "image.h"
 #include "english.h"
+#include "stringutils.h"
+#include "filetype.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
-#include <dirent.h>
+#include <assert.h>
 #include <libgen.h>
 #include <sys/stat.h>
-#include <unistd.h>
-
-static void zipper_replace_cpuimage(struct zipper *z, struct cpuimage *cpu) {
-    if ( z->gl ) {
-        glimage_decr_q(z->gl);
-        z->gl = NULL;
-    }
-
-    if ( (z->gl = glimage_from_cpuimage(cpu)) == NULL )
-        errx(1, "Couldn't put image '%s' from archive '%s' into OpenGL", z->ar.ar->names[z->ar.ar->map[z->ar.pos]], z->path);
-    glimage_incr(z->gl);
-}
-
-static bool zipper_load_archive_image(struct zipper *z) {
-    struct cpuimage *cpu;
-    if ( (cpu = cpuimage_from_ram(z->ar.ar->data[ z->ar.ar->map[z->ar.pos]],
-                                  z->ar.ar->sizes[z->ar.ar->map[z->ar.pos]])) == NULL ) {
-        warnx("Couldn't load image '%s' from archive '%s'", z->ar.ar->names[z->ar.ar->map[z->ar.pos]], z->path);
-        return false;
-    }
-
-    zipper_replace_cpuimage(z, cpu);
-
-    return true;
-}
-
-static bool zipper_load_direct_image(struct zipper *z) {
-    struct cpuimage *cpu;
-    if ( (cpu = cpuimage_from_disk(z->path)) == NULL ) {
-        warnx("Couldn't load image '%s'", z->path);
-        return false;
-    }
-
-    zipper_replace_cpuimage(z, cpu);
-
-    return true;
-}
-
-static bool zipper_prepare_new_archive(struct zipper *z, bool forwards) {
-    if ( z->ar.ar ) {
-        archive_decr_q(z->ar.ar);
-        z->ar.ar = NULL;
-    }
-
-    if ( (z->ar.ar = archive_create(z->path)) == NULL ) {
-        warnx("Couldn't prepare %s as an archive", z->path);
-        return false;
-    }
-
-    if ( !archive_load_all(z->ar.ar) ) {
-        warnx("Couldn't load all data from archive %s", z->path);
-        z->ar.ar = NULL;
-        return false;
-    }
-
-    z->ar.is = true;
-
-    archive_incr(z->ar.ar);
-
-    z->ar.pos = forwards ? 0 : z->ar.ar->files-1;
-
-    return true;
-}
-
-static bool zipper_prepare_new_file(struct zipper *z, bool forwards) {
-    if ( z->ar.ar ) {
-        archive_decr_q(z->ar.ar);
-        z->ar.ar = NULL;
-    }
-
-    if ( ft_file_is_archive(z->path) ) {
-        if ( !zipper_prepare_new_archive(z, forwards) )
-            return false;
-
-        if ( !zipper_load_archive_image(z) )
-            errx(1, "fixme 51398753");
-
-        return true;
-
-    } else if ( ft_file_is_image(z->path) ) {
-        return zipper_load_direct_image(z);
-
-    } else {
-        errx(1, "zipper_prepare_new_file called when z->path (%s) is not an image or archive", z->path);
-    }
-}
+#include <dirent.h>
 
 static bool zipper_is_dir(char *path) {
     struct stat st;
@@ -107,222 +21,452 @@ static bool zipper_is_dir(char *path) {
     return (st.st_mode & S_IFDIR) ? true : false;
 }
 
-static void zipper_dir_down_check(struct zipper *z, bool forwards) {
-    if ( zipper_is_dir(z->path) ) {
-        z->updepth++;
-
-        DIR *dh = opendir(z->path);
-        if ( !dh )
-            return;
-
-        char newpath[MAX_PATH_LENGTH];
-        char first[MAX_PATH_LENGTH];
-        bool found = false;
-        struct dirent *dp;
-        while ( (dp = readdir(dh)) != NULL ) {
-
-            if ( dp->d_name[0] == '.' )
-                continue;
-
-            if ( !found || (forwards ? english_compare_natural(dp->d_name, first) < 0 : english_compare_natural(dp->d_name, first) > 0) ) {
-                snprintf(newpath, MAX_PATH_LENGTH, "%s/%s", z->path, dp->d_name);
-                if ( ft_file_is_image(newpath) || ft_file_is_archive(newpath) || zipper_is_dir(newpath) ) {
-                    strncpy(first, dp->d_name, MAX_PATH_LENGTH);
-                    first[MAX_PATH_LENGTH-1] = '\0';
-                    found = true;
-                }
-            }
+static void * zipper_pos_load_archive_file(struct zipper_pos *p) {
+    int mpos = p->ar.ar->map[p->ar.pos];
+    void *data = p->ar.ar->data[mpos];
+    if ( !data ) {
+        if ( !archive_load_single(p->ar.ar, mpos) ) {
+            warnx("Couldn't load file from archive (%s, index %d, interior filename %s)", p->path, mpos, p->ar.ar->names[mpos]);
+            return NULL;
         }
 
-        closedir(dh);
+        data = p->ar.ar->data[mpos];
+        assert(data);
+    }
 
-        if ( found ) {
-            strncat(z->path, "/", MAX_PATH_LENGTH-strlen(z->path)-1);
-            strncat(z->path, first, MAX_PATH_LENGTH-strlen(z->path)-1);
+    return data;
+}
 
-            // just in case we go down to another directory
-            return zipper_dir_down_check(z, forwards);
-        }
+static bool zipper_pos_load_cpuimage(struct zipper_pos *p) {
+    if ( p->cpu )
+        return true;
+
+    if ( p->ar.is ) {
+        int mpos = p->ar.ar->map[p->ar.pos];
+
+        void *data = zipper_pos_load_archive_file(p);
+        if ( !data )
+            return false;
+
+        p->cpu = cpuimage_from_ram(data, p->ar.ar->sizes[mpos]);
+        if ( !p->cpu )
+            return false;
+        cpuimage_incr(p->cpu);
+
+        return true;
+    } else {
+        p->cpu = cpuimage_from_disk(p->path);
+        if ( !p->cpu )
+            return false;
+        cpuimage_incr(p->cpu);
+
+        return true;
     }
 }
 
-//////////////////////////////////////////////////////////////////////
+static bool zipper_pos_load_glimage(struct zipper_pos *p) {
+    if ( p->gl )
+        return true;
+
+    if ( !zipper_pos_load_cpuimage(p) )
+        return false;
+
+    p->gl = glimage_from_cpuimage(p->cpu);
+    if ( !p->gl )
+        return false;
+    glimage_incr(p->gl);
+
+    return true;
+}
+
+static void zipper_pos_free(struct zipper_pos *p) {
+    if ( p->cpu ) {
+        cpuimage_decr(p->cpu);
+        p->cpu = NULL;
+    }
+    if ( p->gl ) {
+        glimage_decr_q(p->gl);
+        p->gl = NULL;
+    }
+    if ( p->ar.ar ) {
+        archive_decr(p->ar.ar);
+        p->ar.ar = NULL;
+    }
+}
+
+// all string buffers assumed to be MAX_PATH_LENGTH bytes long
+// TODO: remember sorted directory contents and stat() to check if a reload is needed
+// TODO: make O(1) on repeated calls
+static bool zipper_searchdir(char *out, char *dir, char *before, char *after, comparator_fn fn, bool first) {
+    DIR *dh = opendir(dir);
+    if ( !dh )
+        return false;
+
+    bool found = false;
+    struct dirent *dp;
+    while ( (dp = readdir(dh)) != NULL ) {
+
+        if ( dp->d_name[0] == '.' )
+            continue;
+
+        if ( (!found || (first ? fn(dp->d_name, out) < 0 : fn(dp->d_name, out) > 0))
+                && (!before || fn(dp->d_name, before) < 0)
+                && (!after  || fn(dp->d_name, after)  > 0) ) {
+
+            strncpy(out, dp->d_name, MAX_PATH_LENGTH);
+            out[MAX_PATH_LENGTH-1] = '\0';
+            found = true;
+        }
+    }
+
+    closedir(dh);
+
+    return found;
+}
+
+static void zipper_pos_downifdir(struct zipper_pos *p, bool forwards) {
+    while ( zipper_is_dir(p->path) ) {
+        char name[MAX_PATH_LENGTH];
+        if ( !zipper_searchdir(name, p->path, NULL, NULL, english_compare_natural, forwards) )
+            return;
+
+        str_append(p->path, "/", MAX_PATH_LENGTH);
+        str_append(p->path, name, MAX_PATH_LENGTH);
+
+        p->updepth++;
+    }
+}
+
+static bool zipper_pos_file_is_usable(struct zipper_pos *p) {
+    if ( ft_file_is_image(p->path) || ft_file_is_archive(p->path) )
+        return true;
+
+    return false;
+}
+
+static bool zipper_pos_archive_file_is_usable(struct zipper_pos *p) {
+    assert(p->ar.is);
+
+    int mpos = p->ar.ar->map[p->ar.pos];
+
+    void *data = zipper_pos_load_archive_file(p);
+    if ( !data )
+        return false;
+
+    int len = p->ar.ar->sizes[mpos];
+
+    if ( len < 8 )
+        return false;
+
+    return ft_is_image(data);
+}
+
+static bool zipper_pos_prepare_if_archive(struct zipper_pos *p, bool forwards) {
+    if ( !ft_file_is_archive(p->path) )
+        return true;
+
+    p->ar.ar = archive_create(p->path);
+    if ( !p->ar.ar )
+        return false;
+    archive_incr(p->ar.ar);
+
+    p->ar.is = true;
+    p->ar.pos = forwards ? 0 : p->ar.ar->files-1;
+
+    return true;
+}
+
+static bool zipper_pos_seek_inner(struct zipper_pos *p, bool forwards) {
+    char name[MAX_PATH_LENGTH],
+         aux_basename[MAX_PATH_LENGTH],
+         aux_dirname[MAX_PATH_LENGTH],
+         glibc_bullshit[MAX_PATH_LENGTH];
+
+START:
+    if ( p->ar.is ) {
+        assert(p->ar.ar);
+
+        // seek in this archive
+        if ( forwards ) {
+            while ( p->ar.pos < p->ar.ar->files-1 ) {
+                p->ar.pos++;
+                if ( zipper_pos_archive_file_is_usable(p) )
+                    return true;
+            }
+        } else {
+            while ( p->ar.pos > 0 ) {
+                p->ar.pos--;
+                if ( zipper_pos_archive_file_is_usable(p) )
+                    return true;
+            }
+        }
+
+        // hit the end of the archive
+
+        p->ar.is = false; // cleaned up in wrapper
+    }
+
+    strncpy(glibc_bullshit, p->path, MAX_PATH_LENGTH);
+    glibc_bullshit[MAX_PATH_LENGTH-1] = '\0';
+    strncpy(aux_basename, basename(glibc_bullshit), MAX_PATH_LENGTH);
+    aux_basename[MAX_PATH_LENGTH-1] = '\0';
+
+    strncpy(glibc_bullshit, p->path, MAX_PATH_LENGTH);
+    glibc_bullshit[MAX_PATH_LENGTH-1] = '\0';
+    strncpy(aux_dirname, dirname(glibc_bullshit), MAX_PATH_LENGTH);
+    aux_dirname[MAX_PATH_LENGTH-1] = '\0';
+
+    if ( !zipper_searchdir(name, aux_dirname, forwards ? NULL : aux_basename, forwards ? aux_basename : NULL, english_compare_natural, forwards) ) {
+        // couldn't find anything in this directory
+        if ( p->updepth ) {
+            // move up
+            strncpy(glibc_bullshit, p->path, MAX_PATH_LENGTH);
+            glibc_bullshit[MAX_PATH_LENGTH-1] = '\0';
+            strncpy(p->path, dirname(glibc_bullshit), MAX_PATH_LENGTH);
+            p->path[MAX_PATH_LENGTH-1] = '\0';
+
+            p->updepth--;
+            assert(p->updepth >= 0);
+
+            goto START;
+        } else {
+            return false;
+        }
+    } else {
+        // found a next/prev thing in this directory
+
+        strncpy(p->path, aux_dirname, MAX_PATH_LENGTH);
+        p->path[MAX_PATH_LENGTH-1] = '\0';
+
+        str_append(p->path, "/", MAX_PATH_LENGTH);
+        str_append(p->path, name, MAX_PATH_LENGTH);
+
+        zipper_pos_downifdir(p, forwards);
+
+        if ( !zipper_pos_file_is_usable(p) )
+            goto START;
+
+        if ( !zipper_pos_prepare_if_archive(p, forwards) )
+            goto START;
+
+        return true;
+    }
+}
+
+static bool zipper_pos_seek(struct zipper_pos *p, bool forwards) {
+    // handles the state change or lack of it,
+    // while the search is done above.
+
+    struct zipper_pos new;
+    memcpy(&new, p, sizeof(struct zipper_pos));
+
+    if ( !zipper_pos_seek_inner(&new, forwards) ) {
+        // change nothing
+        return false;
+    }
+
+    // seek succeeded, clean up any hanging references
+
+    if ( p->cpu ) {
+        cpuimage_decr(p->cpu);
+        p->cpu = NULL;
+        new.cpu = NULL;
+    }
+    if ( p->gl ) {
+        glimage_decr_q(p->gl);
+        p->gl = NULL;
+        new.gl = NULL;
+    }
+
+    if ( p->ar.is != new.ar.is || p->ar.ar != new.ar.ar ) {
+        if ( !new.ar.is ) {
+            p->ar.is = false;
+            new.ar.ar = NULL;
+        }
+        archive_decr_q(p->ar.ar);
+    }
+
+    memcpy(p, &new, sizeof(struct zipper_pos));
+
+    return true;
+}
+
+static bool zipper_set_position(struct zipper *z, char *path, bool forwards) {
+    for (int i = 0; i < z->pos_len; i++)
+        zipper_pos_free(&(z->pos[i]));
+
+    z->pos[0].updepth = 0;
+
+    strncpy(z->pos[0].path, path, MAX_PATH_LENGTH-1);
+    z->pos[0].path[MAX_PATH_LENGTH-1] = '\0';
+
+    // if we set position to a path ending in a slash, it should be
+    // a directory, and we should handle its contents only
+    if ( z->pos[0].path[strlen(z->pos[0].path)-1] == '/' ) {
+        if ( !zipper_is_dir(z->pos[0].path) ) {
+            warnx("zipper_set_position called with a path with a trailing slash (%s), but item was not a directory", z->pos[0].path);
+            return false;
+        }
+
+        z->pos[0].updepth--;
+    }
+
+    zipper_pos_downifdir(&(z->pos[0]), forwards);
+
+    assert(z->pos[0].updepth >= 0);
+
+    if ( !zipper_pos_file_is_usable(&(z->pos[0])) )
+        if ( !zipper_pos_seek(&(z->pos[0]), true) )
+            return false;
+
+    if ( !zipper_pos_prepare_if_archive(&(z->pos[0]), forwards) )
+        return false;
+
+    z->pos_at = 0;
+    z->pos_len = 1;
+
+    return true;
+}
 
 struct zipper * zipper_create(char *path) {
     struct zipper *z;
     if ( (z = calloc(1, sizeof(struct zipper))) == NULL )
-        err(1, "Couldn't malloc space for zipper");
+        err(1, "Couldn't allocate space for zipper");
     z->refcount = 1;
     zipper_decr_q(z);
 
-    z->updepth = 0;
+    if ( !zipper_set_position(z, path, true) )
+        return NULL;
 
-    strncpy(z->path, path, MAX_PATH_LENGTH);
-    z->path[MAX_PATH_LENGTH-1] = '\0';
+    if ( z->pos[0].path[strlen(z->pos[0].path)-1] == '/' ) {
+        z->pos[0].updepth--;
 
-    if ( z->path[strlen(z->path)-1] == '/' ) {
-        z->updepth--;
-
-        if ( !zipper_is_dir(z->path) ) {
+        if ( !zipper_is_dir(z->pos[0].path) ) {
             warnx("zipper_create called with trailing slash, but item was not a directory");
             return NULL;
         }
     }
 
-    zipper_dir_down_check(z, true);
-
-    if ( !zipper_prepare_new_file(z, true) )
-        errx(1, "fixme 54982192");
+    assert(z->pos[0].updepth >= 0);
 
     return z;
 }
 
-bool zipper_next(struct zipper *z) {
-    // special case: move forward in an archive
-    if ( z->ar.ar ) {
-        if ( z->ar.pos+1 < z->ar.ar->files ) {
-            z->ar.pos++;
-            zipper_load_archive_image(z); // ignore failures, let the display show a broken image
-            return true;
+struct glimage * zipper_current_glimage(struct zipper *z) {
+    if ( !zipper_pos_load_glimage(&(z->pos[z->pos_at])) )
+        return NULL;
+    return z->pos[z->pos_at].gl;
+}
+
+static void zipper_make_pos_space(struct zipper *z, bool right_side) {
+    // makes space and sets pos_len to the appropriate value
+
+    if ( right_side ) {
+        if ( z->pos_len + 1 < ZIPPER_MAX_NUM_POS ) {
+            // enough space to just go ahead
+            z->pos_len++;
+        } else {
+            // destroy left
+            zipper_pos_free(&(z->pos[0]));
+            z->pos_at--;
+            memmove(z->pos, z->pos + 1, sizeof(struct zipper_pos)*(z->pos_len-1));
+        }
+    } else {
+        if ( z->pos_len + 1 < ZIPPER_MAX_NUM_POS ) {
+            // enough space to just shift over
+            memmove(z->pos + 1, z->pos, sizeof(struct zipper_pos)*z->pos_len);
+            z->pos_len++;
+            z->pos_at++;
+        } else {
+            // destroy right
+            zipper_pos_free(&(z->pos[z->pos_len]));
+            memmove(z->pos + 1, z->pos, sizeof(struct zipper_pos)*(z->pos_len-1));
+            z->pos_at++;
         }
     }
 
-    char pathdupe[MAX_PATH_LENGTH];
+    assert(z->pos_at >= 0);
+    assert(z->pos_at < z->pos_len);
+}
 
-    strcpy(pathdupe, z->path);
-    char *this_name = strdup(basename(pathdupe));
+static bool zipper_add_seek_pos(struct zipper *z, bool forwards) {
+    struct zipper_pos new;
+    memcpy(&new, &(z->pos[forwards ? z->pos_len-1 : 0]), sizeof(struct zipper_pos));
+    new.cpu = NULL;
+    new.gl = NULL;
+    if ( new.ar.is )
+        archive_incr(new.ar.ar); // duplicated the pointer, and zipper_pos_seek assumes the refcounts are correct
 
-    strcpy(pathdupe, z->path);
-    DIR *dh = opendir(dirname(pathdupe));
-    if ( !dh ) {
-        strcpy(pathdupe, z->path);
-        warn("Couldn't opendir %s", dirname(pathdupe));
+    if ( zipper_pos_seek(&new, forwards) ) {
+        zipper_make_pos_space(z, forwards);
+        memcpy(&(z->pos[forwards ? z->pos_len-1 : 0]), &new, sizeof(struct zipper_pos));
+        return true;
+    } else {
+        if ( new.ar.is )
+            archive_decr(new.ar.ar);
         return false;
     }
+}
 
-    char new_name[MAX_PATH_LENGTH];
-    bool found_new = false;
-    struct dirent *dp;
-    while ( (dp = readdir(dh)) != NULL ) {
-
-        if ( dp->d_name[0] == '.' )
-            continue;
-
-
-        if ( english_compare_natural(dp->d_name, this_name) > 0 && (!found_new || english_compare_natural(dp->d_name, new_name) < 0) ) {
-            strncpy(new_name, dp->d_name, MAX_PATH_LENGTH);
-            new_name[MAX_PATH_LENGTH-1] = '\0';
-            found_new = true;
-        }
-    }
-
-    closedir(dh);
-
-    free(this_name);
-
-    if ( !found_new ) {
-        if ( z->updepth ) {
-            z->updepth--;
-            strcpy(pathdupe, z->path);
-            strncpy(z->path, dirname(pathdupe), MAX_PATH_LENGTH);
-            z->path[MAX_PATH_LENGTH-1] = '\0';
-            return zipper_next(z);
+bool zipper_next(struct zipper *z) {
+    if ( z->pos_at < z->pos_len-1 ) {
+        z->pos_at++;
+        return true;
+    } else {
+        if ( zipper_add_seek_pos(z, true) ) {
+            z->pos_at++;
+            return true;
         } else {
             return false;
         }
     }
-
-    strcpy(pathdupe, z->path);
-    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(pathdupe), new_name);
-
-    zipper_dir_down_check(z, true);
-
-    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) )
-        // not a known filetype
-        return zipper_next(z);
-
-    if ( !zipper_prepare_new_file(z, true) )
-        // failed to load this file, try the next
-        // TODO: goto?
-        return zipper_next(z);
-
-    return true;
 }
 
 bool zipper_prev(struct zipper *z) {
-    // special case: move backward in an archive
-    if ( z->ar.ar ) {
-        if ( z->ar.pos > 0 ) {
-            z->ar.pos--;
-            zipper_load_archive_image(z); // ignore failures, let the display show a broken image
+    if ( z->pos_at > 0 ) {
+        z->pos_at--;
+        return true;
+    } else {
+        if ( zipper_add_seek_pos(z, false) ) {
+            z->pos_at--;
             return true;
-        }
-    }
-
-    char pathdupe[MAX_PATH_LENGTH];
-
-    strcpy(pathdupe, z->path);
-    char *this_name = strdup(basename(pathdupe));
-
-    strcpy(pathdupe, z->path);
-    DIR *dh = opendir(dirname(pathdupe));
-    if ( !dh ) {
-        strcpy(pathdupe, z->path);
-        warn("Couldn't opendir %s", dirname(pathdupe));
-        return false;
-    }
-
-    char new_name[MAX_PATH_LENGTH];
-    bool found_new = false;
-    struct dirent *dp;
-    while ( (dp = readdir(dh)) != NULL ) {
-
-        if ( dp->d_name[0] == '.' )
-            continue;
-
-
-        if ( english_compare_natural(dp->d_name, this_name) < 0 && (!found_new || english_compare_natural(dp->d_name, new_name) > 0) ) {
-            strncpy(new_name, dp->d_name, MAX_PATH_LENGTH);
-            new_name[MAX_PATH_LENGTH-1] = '\0';
-            found_new = true;
-        }
-    }
-
-    closedir(dh);
-
-    free(this_name);
-
-    if ( !found_new ) {
-        if ( z->updepth ) {
-            z->updepth--;
-            strcpy(pathdupe, z->path);
-            strncpy(z->path, dirname(pathdupe), MAX_PATH_LENGTH);
-            z->path[MAX_PATH_LENGTH-1] = '\0';
-            return zipper_prev(z);
         } else {
             return false;
         }
     }
+}
 
-    strcpy(pathdupe, z->path);
-    snprintf(z->path, MAX_PATH_LENGTH, "%s/%s", dirname(pathdupe), new_name);
+bool zipper_tick_preload(struct zipper *z) {
+    // check for image preloading opportunities
+    for (int i = 0; i < z->pos_len; i++) {
+        if ( !z->pos[i].cpu ) {
+            fprintf(stderr, "[preload] preloading cpuimage for pos=%d (now at %d)\n", i, z->pos_at);
+            zipper_pos_load_cpuimage(&(z->pos[i]));
+            return true;
+        }
+        if ( !z->pos[i].gl ) {
+            fprintf(stderr, "[preload] preloading glimage for pos=%d (now at %d)\n", i, z->pos_at);
+            zipper_pos_load_glimage(&(z->pos[i]));
+            return true;
+        }
+    }
 
-    zipper_dir_down_check(z, false);
+    // check for zipper_pos preloading opportunities
+    if ( ZIPPER_MAX_NUM_POS >= 3 ) {
+        if ( z->pos_at == z->pos_len-1 )
+            if ( zipper_add_seek_pos(z, true) )
+                return true;
+        if ( z->pos_at == 0 )
+            if ( zipper_add_seek_pos(z, false) )
+                return true;
+    }
 
-    if ( !ft_file_is_image(z->path) && !ft_file_is_archive(z->path) )
-        // not a known filetype
-        return zipper_prev(z);
-
-    if ( !zipper_prepare_new_file(z, false) )
-        // failed to load this file, try the previous
-        // TODO: goto?
-        return zipper_prev(z);
-
-    return true;
+    return false;
 }
 
 static void zipper_free(struct zipper *z) {
-    errx(1, "zipper_free not implemented");
+    for (int i = 0; i < z->pos_len; i++)
+        zipper_pos_free(&(z->pos[i]));
 }
 
 void zipper_incr(void *z) {
@@ -331,6 +475,6 @@ void zipper_incr(void *z) {
 
 void zipper_decr(void *z) {
     if ( !( --((struct zipper *) z)->refcount ) )
-        zipper_free(z);
+        zipper_free((struct zipper *) z);
 }
 
