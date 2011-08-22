@@ -60,8 +60,14 @@ struct archive * archive_create(char *path) {
 }
 
 bool archive_load_single(struct archive *ar, int which) {
-    // TODO
-    return archive_load_all(ar);
+    switch ( ar->type ) {
+        case archive_zip:
+            return archive_load_all_zip(ar); // single not implemented
+        case archive_rar:
+            return archive_load_all_rar(ar); // single not implemented
+        default:
+            errx(1, "Unknown archive type %d", ar->type);
+    }
 }
 
 bool archive_load_all(struct archive *ar) {
