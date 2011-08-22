@@ -59,6 +59,11 @@ struct archive * archive_create(char *path) {
     }
 }
 
+bool archive_load_single(struct archive *ar, int which) {
+    // TODO
+    return archive_load_all(ar);
+}
+
 bool archive_load_all(struct archive *ar) {
     switch ( ar->type ) {
         case archive_zip:
