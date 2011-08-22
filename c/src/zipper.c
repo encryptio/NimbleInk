@@ -479,6 +479,7 @@ bool zipper_tick_preload(struct zipper *z) {
 static void zipper_free(struct zipper *z) {
     for (int i = 0; i < z->pos_len; i++)
         zipper_pos_free(&(z->pos[i]));
+    free(z);
 }
 
 void zipper_incr(void *z) {
