@@ -379,7 +379,7 @@ static void zipper_make_pos_space(struct zipper *z, bool right_side) {
             z->pos_at++;
         } else {
             // destroy right
-            zipper_pos_free(&(z->pos[z->pos_len]));
+            zipper_pos_free(&(z->pos[z->pos_len-1]));
             memmove(z->pos + 1, z->pos, sizeof(struct zipper_pos)*(z->pos_len-1));
             z->pos_at++;
         }
