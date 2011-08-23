@@ -54,7 +54,7 @@ void set_window_name(struct zipper *z) {
         snprintf(name, 1000, "%s: (%d/%d) %s", pos->path, pos->ar.pos+1, pos->ar.ar->files, pos->ar.ar->names[pos->ar.ar->map[pos->ar.pos]]);
     else {
         strncpy(name, pos->path, 1000);
-        pos->path[999] = '\0';
+        name[999] = '\0';
     }
 
     // sanitize (OSX yells otherwise)
