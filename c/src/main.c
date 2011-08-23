@@ -107,79 +107,77 @@ int main(int argc, char **argv) {
     bool do_draw = true;
     bool draw_immediately = true;
     while ( running ) {
-        if ( !draw_immediately ) {
-            SDL_Event evt;
-            do_draw = true;
-            // TODO: SDL 1.3 adds SDL_WaitEventTimeout, which should be used here
-            if ( SDL_WaitEvent(&evt) ) {
-                switch ( evt.type ) {
-                    case SDL_KEYDOWN:
-                        if ( evt.key.keysym.sym == SDLK_RIGHT ) {
-                            zipper_next(z);
-                            set_window_name(z);
-                        } else if ( evt.key.keysym.sym == SDLK_LEFT ) {
-                            zipper_prev(z);
-                            set_window_name(z);
-                        } else if ( evt.key.keysym.sym == SDLK_q ) {
-                            running = false;
-                        } else if ( evt.key.keysym.sym == SDLK_m ) {
-                            image_multidraw = !image_multidraw;
-                        } else if ( evt.key.keysym.sym == SDLK_f ) {
-                            if ( !fullscreen ) {
-                                fullscreen = true;
-                                screen = SDL_SetVideoMode(native_width, native_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE | SDL_FULLSCREEN);
-                                if ( !screen )
-                                    errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-                                window_width = screen->w;
-                                window_height = screen->h;
-                                reshape_gl();
-                            } else {
-                                fullscreen = false;
-                                screen = SDL_SetVideoMode(800, 600, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE);
-                                if ( !screen )
-                                    errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-                                window_width = screen->w;
-                                window_height = screen->h;
-                                reshape_gl();
-                            }
-                        }
-                        break;
-
-                    case SDL_KEYUP:
-                    case SDL_MOUSEMOTION:
-                    case SDL_MOUSEBUTTONDOWN:
-                    case SDL_MOUSEBUTTONUP:
-                    case SDL_ACTIVEEVENT:
-                        do_draw = false;
-                        break;
-
-                    case SDL_QUIT:
+        SDL_Event evt;
+        do_draw = true;
+        // TODO: SDL 1.3 adds SDL_WaitEventTimeout, which should be used here
+        if ( draw_immediately ? SDL_PollEvent(&evt) : SDL_WaitEvent(&evt) ) {
+            switch ( evt.type ) {
+                case SDL_KEYDOWN:
+                    if ( evt.key.keysym.sym == SDLK_RIGHT ) {
+                        zipper_next(z);
+                        set_window_name(z);
+                    } else if ( evt.key.keysym.sym == SDLK_LEFT ) {
+                        zipper_prev(z);
+                        set_window_name(z);
+                    } else if ( evt.key.keysym.sym == SDLK_q ) {
                         running = false;
-                        break;
+                    } else if ( evt.key.keysym.sym == SDLK_m ) {
+                        image_multidraw = !image_multidraw;
+                    } else if ( evt.key.keysym.sym == SDLK_f ) {
+                        if ( !fullscreen ) {
+                            fullscreen = true;
+                            screen = SDL_SetVideoMode(native_width, native_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE | SDL_FULLSCREEN);
+                            if ( !screen )
+                                errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+                            window_width = screen->w;
+                            window_height = screen->h;
+                            reshape_gl();
+                        } else {
+                            fullscreen = false;
+                            screen = SDL_SetVideoMode(800, 600, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE);
+                            if ( !screen )
+                                errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+                            window_width = screen->w;
+                            window_height = screen->h;
+                            reshape_gl();
+                        }
+                    }
+                    break;
 
-                    case SDL_VIDEORESIZE:
-                        window_width  = evt.resize.w;
-                        window_height = evt.resize.h;
-                        screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
-                        if ( !screen )
-                            errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-                        reshape_gl();
-                        break;
+                case SDL_KEYUP:
+                case SDL_MOUSEMOTION:
+                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONUP:
+                case SDL_ACTIVEEVENT:
+                    do_draw = false;
+                    break;
 
-                    default:
-                        printf("unhandled event, type=%d\n", evt.type);
-                }
+                case SDL_QUIT:
+                    running = false;
+                    break;
+
+                case SDL_VIDEORESIZE:
+                    window_width  = evt.resize.w;
+                    window_height = evt.resize.h;
+                    screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
+                    if ( !screen )
+                        errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+                    reshape_gl();
+                    break;
+
+                default:
+                    printf("unhandled event, type=%d\n", evt.type);
             }
         }
 
         if ( do_draw && running ) {
             printf("drawing at %d\n", SDL_GetTicks());
+            glClear(GL_COLOR_BUFFER_BIT);
             struct glimage *gl = zipper_current_glimage(z);
             if ( gl ) {
                 float f = fit_factor(gl->w, gl->h, window_width, window_height);
                 float w = gl->w*f;
                 float h = gl->h*f;
-                glClear(GL_COLOR_BUFFER_BIT);
                 glimage_draw(gl, (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
             } else {
                 fprintf(stderr, "no image to draw\n");
@@ -188,7 +186,7 @@ int main(int argc, char **argv) {
         }
 
         draw_immediately = true;
-        for (int i = 0; i < 3 && draw_immediately; i++)
+        for (int i = 0; i < 4 && draw_immediately; i++)
             draw_immediately = zipper_tick_preload(z);
 
         ref_release_pool();
