@@ -443,15 +443,13 @@ bool zipper_tick_preload(struct zipper *z) {
 #if DEBUG_PRELOAD
             fprintf(stderr, "[preload] preloading cpuimage for pos=%d (now at %d)\n", i, z->pos_at);
 #endif
-            zipper_pos_load_cpuimage(&(z->pos[i]));
-            return true;
+            return zipper_pos_load_cpuimage(&(z->pos[i]));
         }
         if ( !z->pos[i].gl ) {
 #if DEBUG_PRELOAD
             fprintf(stderr, "[preload] preloading glimage for pos=%d (now at %d)\n", i, z->pos_at);
 #endif
-            zipper_pos_load_glimage(&(z->pos[i]));
-            return true;
+            return zipper_pos_load_glimage(&(z->pos[i]));
         }
     }
 
