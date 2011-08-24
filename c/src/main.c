@@ -150,7 +150,6 @@ int main(int argc, char **argv) {
                 case SDL_MOUSEMOTION:
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
-                case SDL_ACTIVEEVENT:
                     do_draw = false;
                     break;
 
@@ -167,6 +166,7 @@ int main(int argc, char **argv) {
                     reshape_gl();
                     break;
 
+                case SDL_ACTIVEEVENT:
                 default:
                     printf("unhandled event, type=%d\n", evt.type);
             }
