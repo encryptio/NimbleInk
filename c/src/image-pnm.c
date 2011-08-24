@@ -94,7 +94,7 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
     // Load image data
 
     uint8_t r,g,b;
-    int temp, left;
+    int temp = 0, left;
 
     // extra space at the right of the last slice
     int extra_width = i->s_w*IMAGE_SLICE_SIZE - width;
@@ -106,7 +106,7 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
 
     for (int y = 0; y < height; y++) {
         int sy = y/IMAGE_SLICE_SIZE;
-        uint8_t *slice, *row, *at;
+        uint8_t *slice, *row, *at = NULL;
 
         left = 0; // Binary PBM: aligned to row boundaries
 
@@ -237,7 +237,7 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
             *at++ = 255; // a
         }
 
-        if ( extra_width )
+        if ( extra_width && at )
             memset(at, 0, extra_width);
     }
 
