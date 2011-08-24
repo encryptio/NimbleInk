@@ -99,6 +99,8 @@ int main(int argc, char **argv) {
     // Set up image
     
     struct zipper *z = zipper_create(argv[1]);
+    if ( z == NULL )
+        errx(1, "Couldn't create zipper\n");
     zipper_incr(z);
 
     set_window_name(z);
