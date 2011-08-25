@@ -47,7 +47,7 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
         warnx("Couldn't set w/h for gif file\n");
         goto DESTROY;
     }
-    i->is_bgra = false;
+    i->is_bgra = true;
 
     struct SavedImage *img = gif->SavedImages;
     ColorMapObject *map = img->ImageDesc.ColorMap;
@@ -69,14 +69,14 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
             for (int z = 0; z < IMAGE_SLICE_SIZE; z++) {
                 if ( x < gif->SWidth ) {
                     GifColorType *c = &(map->Colors[img->RasterBits[x+y*gif->SWidth]]);
-                    *at++ = c->Red;
-                    *at++ = c->Green;
                     *at++ = c->Blue;
+                    *at++ = c->Green;
+                    *at++ = c->Red;
                     *at++ = 255; // TODO: gif transparency
                 } else {
-                    *at++ = 0; // r
-                    *at++ = 0; // g
                     *at++ = 0; // b
+                    *at++ = 0; // g
+                    *at++ = 0; // r
                     *at++ = 0; // a
                 }
                 x++;
