@@ -16,7 +16,7 @@
 bool archive_load_toc_zip(struct archive *ar) {
     char cmd[1000];
     strcpy(cmd, "unzip -l -qq ");
-    str_append_quoted_as_unzip_literal(cmd, ar->path, 1000);
+    str_append_quoted_as_unzip_file_literal(cmd, ar->path, 1000);
 
     FILE *fh = popen(cmd, "r");
     if ( fh == NULL )
@@ -85,16 +85,16 @@ bool archive_load_toc_zip(struct archive *ar) {
 bool archive_load_all_zip(struct archive *ar) {
     char cmd[1000];
     strcpy(cmd, "unzip -p -qq ");
-    str_append_quoted_as_unzip_literal(cmd, ar->path, 1000);
+    str_append_quoted_as_unzip_file_literal(cmd, ar->path, 1000);
     return archive_load_all_from_command(ar, cmd);
 }
 
 bool archive_load_single_zip(struct archive *ar, int which) {
     char cmd[1000];
     strcpy(cmd, "unzip -p -qq ");
-    str_append_quoted_as_unzip_literal(cmd, ar->path, 1000);
+    str_append_quoted_as_unzip_file_literal(cmd, ar->path, 1000);
     str_append(cmd, " ", 1000);
-    str_append_quoted_as_unzip_literal(cmd, ar->names[which], 1000);
+    str_append_quoted_as_unzip_interior_literal(cmd, ar->names[which], 1000);
     return archive_load_single_from_command(ar, cmd, which);
 }
 
