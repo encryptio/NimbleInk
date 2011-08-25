@@ -88,7 +88,7 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
         warnx("Couldn't set w/h for PNM file\n");
         return false;
     }
-    i->is_bgra = false;
+    i->is_bgra = true;
 
     ////////////////////////////////////////
     // Load image data
@@ -231,9 +231,9 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
             }
 
             // TODO: OMGWTFHAX??!?!?! (endianness?)
-            *at++ = g;
-            *at++ = b;
             *at++ = r;
+            *at++ = b;
+            *at++ = g;
             *at++ = 255; // a
         }
 
