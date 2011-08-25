@@ -18,7 +18,7 @@ COMPILE="$COMPILE -DENABLE_LIBJPEG -DENABLE_GIFLIB -DENABLE_PNM"
 mkdir -p bin
 mkdir -p obj
 
-for i in main.c main-imagedebug.c \
+for i in main.c main-imagedebug.c main-sorttest.c \
         archive.c archive-unrar.c archive-unzip.c reference.c \
         filetype.c zipper.c english.c stringutils.c \
         glimage.c cpuimage.c image-libjpeg.c image-sdl_image.c image-giflib.c image-pnm.c; do
@@ -28,4 +28,5 @@ done
 
 cc -o bin/view $@ obj/{main,glimage,cpuimage,archive,filetype,zipper,english,image-libjpeg,image-sdl_image,image-giflib,image-pnm,stringutils,archive-unrar,archive-unzip,reference}.o $LINK
 cc -o bin/imagedebug $@ obj/{main-imagedebug,cpuimage,image-libjpeg,filetype,image-sdl_image,image-giflib,image-pnm,reference}.o $LINK
+cc -o bin/sorttest $@ obj/{main-sorttest,english}.o $LINK
 
