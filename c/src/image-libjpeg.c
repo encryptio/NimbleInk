@@ -33,7 +33,7 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
         warn("Couldn't setup cpuimage");
         goto DESTROY;
     }
-    i->is_bgra = false;
+    i->is_bgra = true;
 
     cinfo.out_color_space = JCS_RGB;
     cinfo.buffered_image = false;
@@ -68,9 +68,9 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
                 uint8_t *this = slice + yoff;
                 for (int in_x = 0; in_x < IMAGE_SLICE_SIZE; in_x++) {
                     // TODO: endianness
-                    this[in_x*4  ] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3  ];
+                    this[in_x*4  ] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3+2];
                     this[in_x*4+1] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3+1];
-                    this[in_x*4+2] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3+2];
+                    this[in_x*4+2] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3  ];
                     this[in_x*4+3] = 255;
 
                     xleft--;
