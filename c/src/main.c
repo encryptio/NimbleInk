@@ -154,7 +154,13 @@ int main(int argc, char **argv) {
 
         if ( do_draw && running ) {
             printf("drawing at %d\n", SDL_GetTicks());
+
+            // clear buffers
+            glClearColor(0,0,0.1,0);
+            glClear(GL_COLOR_BUFFER_BIT);
+
             glview_draw(gl);
+
             SDL_GL_SwapBuffers();
         }
 

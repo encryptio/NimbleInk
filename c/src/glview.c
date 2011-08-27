@@ -44,10 +44,6 @@ void glview_draw(struct glview *gl) {
     gl->w = viewport[2];
     gl->h = viewport[3];
 
-    // clear buffers
-    glClearColor(0,0,0.1,0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     // set camera: orthographic, pixel aligned, (0,0) in upper left
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
