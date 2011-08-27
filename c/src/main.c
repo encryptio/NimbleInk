@@ -10,41 +10,24 @@
 #include <err.h>
 #include <inttypes.h>
 
-#include "image.h"
-#include "archive.h"
 #include "zipper.h"
+#include "glview.h"
 
-int window_width = 800;
-int window_height = 550;
+#define INITIAL_WIDTH 800
+#define INITIAL_HEIGHT 550
+
 int native_width;
 int native_height;
 bool fullscreen = false;
 
-void reshape_gl(void) {
+void reshape_gl(int w, int h) {
     // on some platforms, the gl context is destroyed when resizing, so we need to rebuild it from scratch
     glEnable(GL_TEXTURE_2D);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glClearColor(0,0,0.1,0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // now the actual resize parts
-    glViewport(0,0,window_width,window_height);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0,window_width,window_height,0,-1,1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-
-float fit_factor(float mw, float mh, float w, float h) {
-    float sf = w/mw;
-    if ( sf*mh > h )
-        sf = h/mh;
-    return sf;
+    glViewport(0,0,w,h);
 }
 
 void set_window_name(struct zipper *z) {
@@ -86,14 +69,14 @@ int main(int argc, char **argv) {
 
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-    SDL_Surface *screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
+    SDL_Surface *screen = SDL_SetVideoMode( INITIAL_WIDTH, INITIAL_HEIGHT, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
     if ( !screen )
-        errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
+        errx(1, "Couldn't set %dx%d video: %s", INITIAL_WIDTH, INITIAL_HEIGHT, SDL_GetError());
 
     //////
     // Set up OpenGL
     
-    reshape_gl();
+    reshape_gl(screen->w, screen->h);
 
     //////
     // Set up image
@@ -102,6 +85,9 @@ int main(int argc, char **argv) {
     if ( z == NULL )
         errx(1, "Couldn't create zipper\n");
     zipper_incr(z);
+
+    struct glview *gl = glview_create();
+    glview_set_zipper(gl, z);
 
     set_window_name(z);
 
@@ -130,18 +116,14 @@ int main(int argc, char **argv) {
                             fullscreen = true;
                             screen = SDL_SetVideoMode(native_width, native_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE | SDL_FULLSCREEN);
                             if ( !screen )
-                                errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-                            window_width = screen->w;
-                            window_height = screen->h;
-                            reshape_gl();
+                                errx(1, "Couldn't set %dx%d video: %s", native_width, native_height, SDL_GetError());
+                            reshape_gl(screen->w, screen->h);
                         } else {
                             fullscreen = false;
-                            screen = SDL_SetVideoMode(800, 600, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE);
+                            screen = SDL_SetVideoMode(INITIAL_WIDTH, INITIAL_HEIGHT, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE);
                             if ( !screen )
-                                errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-                            window_width = screen->w;
-                            window_height = screen->h;
-                            reshape_gl();
+                                errx(1, "Couldn't set %dx%d video: %s", INITIAL_WIDTH, INITIAL_HEIGHT, SDL_GetError());
+                            reshape_gl(screen->w, screen->h);
                         }
                     }
                     break;
@@ -158,12 +140,10 @@ int main(int argc, char **argv) {
                     break;
 
                 case SDL_VIDEORESIZE:
-                    window_width  = evt.resize.w;
-                    window_height = evt.resize.h;
-                    screen = SDL_SetVideoMode( window_width, window_height, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
+                    screen = SDL_SetVideoMode( evt.resize.w, evt.resize.h, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE );
                     if ( !screen )
-                        errx(1, "Couldn't set %dx%d video: %s", window_width, window_height, SDL_GetError());
-                    reshape_gl();
+                        errx(1, "Couldn't set %dx%d video: %s", evt.resize.w, evt.resize.h, SDL_GetError());
+                    reshape_gl(screen->w, screen->h);
                     break;
 
                 case SDL_ACTIVEEVENT:
@@ -174,16 +154,7 @@ int main(int argc, char **argv) {
 
         if ( do_draw && running ) {
             printf("drawing at %d\n", SDL_GetTicks());
-            glClear(GL_COLOR_BUFFER_BIT);
-            struct glimage *gl = zipper_current_glimage(z);
-            if ( gl ) {
-                float f = fit_factor(gl->w, gl->h, window_width, window_height);
-                float w = gl->w*f;
-                float h = gl->h*f;
-                glimage_draw(gl, (window_width-w)/2, (window_height-h)/2, (window_width-w)/2+w, (window_height-h)/2+h);
-            } else {
-                fprintf(stderr, "no image to draw\n");
-            }
+            glview_draw(gl);
             SDL_GL_SwapBuffers();
         }
 
@@ -194,6 +165,7 @@ int main(int argc, char **argv) {
         ref_release_pool();
     }
 
+    glview_free(gl);
     zipper_decr_q(z);
     ref_release_pool();
 
