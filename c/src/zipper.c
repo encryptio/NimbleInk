@@ -283,7 +283,8 @@ static bool zipper_pos_seek(struct zipper_pos *p, bool forwards) {
             p->ar.is = false;
             new.ar.ar = NULL;
         }
-        archive_decr_q(p->ar.ar);
+        if ( p->ar.ar )
+            archive_decr_q(p->ar.ar);
     }
 
     memcpy(p, &new, sizeof(struct zipper_pos));
