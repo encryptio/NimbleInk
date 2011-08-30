@@ -31,6 +31,8 @@ static void ref_expand_queue(int n) {
 }
 
 void ref_queue_decr(void *obj, decr_fn decr) {
+    if ( !obj )
+        errx(1, "Internal error: tried to queue a reference decrement of NULL");
     ref_expand_queue(1);
     ref_decr_queue[ref_decr_queue_used].obj  = obj;
     ref_decr_queue[ref_decr_queue_used].decr = decr;
@@ -57,11 +59,12 @@ void ref_release_pool(void) {
 
         memmove(ref_decr_queue, ref_decr_queue+1, sizeof(struct ref_queued_decrement) * ref_decr_queue_used);
 
-        assert( *((int*)obj) > 0 );
-
 #if DEBUG_GC
-        fprintf(stderr, "[gc] calling decr=%p over %p (refcount=%d)\n", decr, obj, *((int*)obj));
+        fprintf(stderr, "[gc] calling decr=%p over %p\n", decr, obj);
+        fprintf(stderr, "[gc]     refcount=%d\n", *((int*)obj));
 #endif
+
+        assert( *((int*)obj) > 0 );
 
         decr(obj);
 
