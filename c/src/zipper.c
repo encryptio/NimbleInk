@@ -353,6 +353,14 @@ struct zipper * zipper_create(char *path) {
     return z;
 }
 
+void zipper_clear_glimages(struct zipper *z) {
+    for (int i = 0; i < z->pos_len; i++)
+        if ( z->pos[i].gl ) {
+            glimage_decr_q(z->pos[i].gl);
+            z->pos[i].gl = NULL;
+        }
+}
+
 struct glimage * zipper_current_glimage(struct zipper *z) {
     if ( !zipper_pos_load_glimage(&(z->pos[z->pos_at])) )
         return NULL;

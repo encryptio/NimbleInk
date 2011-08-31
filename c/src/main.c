@@ -118,12 +118,16 @@ int main(int argc, char **argv) {
                             if ( !screen )
                                 errx(1, "Couldn't set %dx%d video: %s", native_width, native_height, SDL_GetError());
                             reshape_gl(screen->w, screen->h);
+                            zipper_clear_glimages(z);
+                            ref_release_pool();
                         } else {
                             fullscreen = false;
                             screen = SDL_SetVideoMode(INITIAL_WIDTH, INITIAL_HEIGHT, 32, SDL_OPENGL | SDL_DOUBLEBUF | SDL_RESIZABLE);
                             if ( !screen )
                                 errx(1, "Couldn't set %dx%d video: %s", INITIAL_WIDTH, INITIAL_HEIGHT, SDL_GetError());
                             reshape_gl(screen->w, screen->h);
+                            zipper_clear_glimages(z);
+                            ref_release_pool();
                         }
                     }
                     break;
@@ -144,6 +148,8 @@ int main(int argc, char **argv) {
                     if ( !screen )
                         errx(1, "Couldn't set %dx%d video: %s", evt.resize.w, evt.resize.h, SDL_GetError());
                     reshape_gl(screen->w, screen->h);
+                    zipper_clear_glimages(z);
+                    ref_release_pool();
                     break;
 
                 case SDL_ACTIVEEVENT:

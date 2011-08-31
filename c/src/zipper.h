@@ -39,6 +39,8 @@ struct zipper * zipper_create(char *path);
 bool zipper_next(struct zipper *z);
 bool zipper_prev(struct zipper *z);
 
+void zipper_clear_glimages(struct zipper *z);
+
 struct glimage * zipper_current_glimage(struct zipper *z);
 
 // returns true if it wants to be called again
