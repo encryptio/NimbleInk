@@ -28,7 +28,7 @@ struct glimage {
 };
 
 struct glimage * glimage_from_cpuimage(struct cpuimage *i);
-void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2, float pixel_size);
+void glimage_draw(struct glimage *gl, float cx, float cy, float width, float height, float pixel_size);
 
 void glimage_incr(void *gl);
 void glimage_decr(void *gl);

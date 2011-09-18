@@ -59,7 +59,14 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
     return gl;
 }
 
-void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2, float pixel_size) {
+void glimage_draw(struct glimage *gl, float cx, float cy, float width, float height, float pixel_size) {
+    float x1 = cx - width/2;
+    float x2 = cx + width/2;
+    float y1 = cy - height/2;
+    float y2 = cy + height/2;
+
+    fprintf(stderr, "[glimage] draw (%f,%f) size (%f,%f), bounds are (%f:%f, %f:%f)\n", cx, cy, width, height, x1, x2, y1, y2);
+
     int slice = 0;
     float x_step = (x2-x1)/(gl->s_w - ((float) gl->s_w*IMAGE_SLICE_SIZE - gl->w)/IMAGE_SLICE_SIZE);
     float y_step = (y2-y1)/(gl->s_h - ((float) gl->s_h*IMAGE_SLICE_SIZE - gl->h)/IMAGE_SLICE_SIZE);

@@ -94,6 +94,8 @@ int main(int argc, char **argv) {
     bool running = true;
     bool do_draw = true;
     bool draw_immediately = true;
+    bool animation_running = false;
+    int last_ticks = 0;
     while ( running ) {
         SDL_Event evt;
         do_draw = true;
@@ -129,6 +131,8 @@ int main(int argc, char **argv) {
                             zipper_clear_glimages(z);
                             ref_release_pool();
                         }
+                    } else if ( evt.key.keysym.sym == SDLK_r ) {
+                        glview_set_rotate(gl, 1);
                     }
                     break;
 
@@ -158,8 +162,10 @@ int main(int argc, char **argv) {
             }
         }
 
+        int now_ticks = SDL_GetTicks();
+
         if ( do_draw && running ) {
-            printf("drawing at %d\n", SDL_GetTicks());
+            printf("drawing at %d\n", now_ticks);
 
             // clear buffers
             glClearColor(0,0,0.1,0);
@@ -173,6 +179,17 @@ int main(int argc, char **argv) {
         draw_immediately = true;
         for (int i = 0; i < 4 && draw_immediately; i++)
             draw_immediately = zipper_tick_preload(z);
+
+        int ticks = now_ticks - last_ticks;
+        last_ticks = now_ticks;
+        if ( !animation_running )
+            ticks = 0;
+        if ( glview_animate(gl, ticks/1000.0) ) { // TODO: should this be before the draw?
+            draw_immediately = true;
+            animation_running = true;
+        } else {
+            animation_running = false;
+        }
 
         ref_release_pool();
     }
