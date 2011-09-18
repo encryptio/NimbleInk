@@ -27,7 +27,10 @@ for i in main.c main-imagedebug.c main-sorttest.c \
     cc -c -o obj/"`basename "$i" .c`".o $COMPILE $@ src/"$i" || exit 1
 done
 
+echo "link bin/view"
 cc -o bin/view $@ obj/{main,glview,glimage,cpuimage,archive,filetype,zipper,english,image-libjpeg,image-sdl_image,image-giflib,image-pnm,stringutils,archive-unrar,archive-unzip,reference}.o $LINK
+echo "link bin/imagedebug"
 cc -o bin/imagedebug $@ obj/{main-imagedebug,cpuimage,image-libjpeg,filetype,image-sdl_image,image-giflib,image-pnm,reference}.o $LINK
+echo "link bin/sorttest"
 cc -o bin/sorttest $@ obj/{main-sorttest,english}.o $LINK
 
