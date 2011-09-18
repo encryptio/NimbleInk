@@ -59,7 +59,7 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
     return gl;
 }
 
-void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
+void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2, float pixel_size) {
     int slice = 0;
     float x_step = (x2-x1)/(gl->s_w - ((float) gl->s_w*IMAGE_SLICE_SIZE - gl->w)/IMAGE_SLICE_SIZE);
     float y_step = (y2-y1)/(gl->s_h - ((float) gl->s_h*IMAGE_SLICE_SIZE - gl->h)/IMAGE_SLICE_SIZE);
@@ -81,6 +81,8 @@ void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
 #define MULTIDRAW_SHARPNESS_FACTOR 0.75
 #endif
 
+                float md_factor = (1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR*pixel_size;
+
                 // this code does incorrect things with alpha-blended source images
                 int drawn = 0;
                 for (int dx = 0; dx <= MULTIDRAW_SIZE; dx++)
@@ -89,14 +91,14 @@ void glimage_draw(struct glimage *gl, float x1, float y1, float x2, float y2) {
                             glColor4f(1,1,1,1.0/(drawn+1));
 
                             glBegin(GL_QUADS);
-                            glTexCoord2i(0,0); glVertex2f(l + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          b + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
-                            glTexCoord2i(1,0); glVertex2f(r + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          b + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
-                            glTexCoord2i(1,1); glVertex2f(r + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          t + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
-                            glTexCoord2i(0,1); glVertex2f(l + dx*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR,
-                                                          t + dy*(1.0/MULTIDRAW_SIZE)*MULTIDRAW_SHARPNESS_FACTOR);
+                            glTexCoord2i(0,0); glVertex2f(l + dx*md_factor,
+                                                          b + dy*md_factor);
+                            glTexCoord2i(1,0); glVertex2f(r + dx*md_factor,
+                                                          b + dy*md_factor);
+                            glTexCoord2i(1,1); glVertex2f(r + dx*md_factor,
+                                                          t + dy*md_factor);
+                            glTexCoord2i(0,1); glVertex2f(l + dx*md_factor,
+                                                          t + dy*md_factor);
                             glEnd();
 
                             drawn++;

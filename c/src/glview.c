@@ -57,7 +57,7 @@ void glview_draw(struct glview *gl) {
             float f = fit_factor(img->w, img->h, gl->w, gl->h);
             float w = img->w*f;
             float h = img->h*f;
-            glimage_draw(img, (gl->w-w)/2, (gl->h-h)/2, (gl->w-w)/2+w, (gl->h-h)/2+h);
+            glimage_draw(img, (gl->w-w)/2, (gl->h-h)/2, (gl->w-w)/2+w, (gl->h-h)/2+h, 1);
         } else {
             // TODO: draw a "broken image" image
             fprintf(stderr, "[glview] no image to draw\n");
