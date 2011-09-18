@@ -40,6 +40,7 @@ void glview_draw(struct glview *gl) {
     glGetIntegerv(GL_VIEWPORT, viewport);
 
     fprintf(stderr, "[glview] drawing frame %ld into %dx%d+%d,%d\n", gl->frameidx, viewport[2], viewport[3], viewport[0], viewport[1]);
+    gl->frameidx++;
 
     gl->w = viewport[2];
     gl->h = viewport[3];
