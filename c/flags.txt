@@ -1,3 +1,6 @@
+SUPPORT FLAGS
+______________________________________________________________________
+
 ENABLE_LIBJPEG (default)
     enables support for libjpeg.
 
@@ -10,6 +13,9 @@ ENABLE_PNM (default)
 ENABLE_SDL_IMAGE
     enables support for the SDL_image library.
 
+DEBUG FLAGS
+______________________________________________________________________
+
 DEBUG_DRAW_SLICES
     draws slice boundaries on image display.
 
@@ -21,3 +27,13 @@ DEBUG_PRELOAD
 
 DEBUG_RANDOMIZE_SLICES
     randomize the memory in the cpuimage slices before loading the image (for uninitialized data detection)
+
+CUSTOMIZATION
+______________________________________________________________________
+
+MULTIDRAW_SIZE
+    the square root of the number of images to draw in multidraw mode. should be 2 or 3 for best performance, defaults to 2.
+
+MULTIDRAW_SHARPNESS_FACTOR
+    the size of the box in which to multidraw, (0:1]. lower values smooth less. defaults to 0.75.
+
