@@ -103,7 +103,6 @@ void glview_draw(struct glview *gl) {
 }
 
 bool glview_animate(struct glview *gl, float s) {
-    fprintf(stderr, "[glview] animate %f seconds\n", s);
     bool ret = false;
 
     if ( gl->rot_anim_completeness < 1 ) {
