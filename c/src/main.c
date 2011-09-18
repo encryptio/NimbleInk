@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
                             ref_release_pool();
                         }
                     } else if ( evt.key.keysym.sym == SDLK_r ) {
-                        glview_set_rotate(gl, 1);
+                        glview_set_rotate(gl, (evt.key.keysym.mod & KMOD_SHIFT) ? 1 : -1);
                     }
                     break;
 
