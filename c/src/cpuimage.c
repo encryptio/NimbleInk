@@ -102,7 +102,7 @@ bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h) {
     }
 
     if ( (i->slices = malloc(4 * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
-        err(1, "Couldn't malloc space for image");
+        err(1, "Couldn't allocate space for image");
 
 #if DEBUG_RANDOMIZE_SLICES
     for (int j = 0; j < 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h/sizeof(long); j++)

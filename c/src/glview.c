@@ -23,7 +23,7 @@ static float fit_factor(float mw, float mh, float w, float h) {
 struct glview *glview_create(void) {
     struct glview *gl;
     if ( (gl = calloc(1, sizeof(struct glview))) == NULL )
-        err(1, "Couldn't malloc space for glview");
+        err(1, "Couldn't allocate space for glview");
 
     gl->rot_anim_completeness = 1;
 
