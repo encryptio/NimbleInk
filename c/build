@@ -14,6 +14,7 @@ LINK="$LINK dep/build/libjpeg.a dep/build/libgif.a"
 
 COMPILE="-Wall -O2 -std=c99 -g $COMPILE -Idep/build"
 COMPILE="$COMPILE -DENABLE_LIBJPEG -DENABLE_GIFLIB -DENABLE_PNM"
+COMPILE="$COMPILE -DLOOP_SDL"
 
 mkdir -p bin
 mkdir -p obj
