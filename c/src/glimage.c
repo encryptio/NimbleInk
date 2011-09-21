@@ -79,7 +79,7 @@ void glimage_draw(struct glimage *gl, float cx, float cy, float width, float hei
             double r = x1 + x_step*(sx+1);
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
-            if ( image_multidraw ) {
+            if ( image_multidraw && (width/pixel_size < gl->w || height/pixel_size < gl->h) ) {
 #ifndef MULTIDRAW_SIZE
 #define MULTIDRAW_SIZE 2
 #endif
