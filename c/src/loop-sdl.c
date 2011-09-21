@@ -274,6 +274,8 @@ static void loop_window_free(struct loop_window *win) {
     zipper_decr(win->z);
     glview_free(win->gl);
     free(win);
+
+    // XXX: is main_win okay?
 }
 
 void loop_window_incr(void *win) {
