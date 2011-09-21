@@ -13,6 +13,13 @@ ENABLE_PNM (default)
 ENABLE_SDL_IMAGE
     enables support for the SDL_image library.
 
+LOOP CHOICE FLAGS
+______________________________________________________________________
+Note: precisely one of these should be enabled.
+
+LOOP_SDL
+    enables the SDL loop
+
 DEBUG FLAGS
 ______________________________________________________________________
 
