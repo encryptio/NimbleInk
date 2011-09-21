@@ -1,3 +1,7 @@
+#ifdef LOOP_SDL
+#include <SDL.h>
+#endif
+
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,11 +56,7 @@ static void keyevt(void *pt, struct loop_window *win, bool is_repeat, uint32_t c
     }
 }
 
-#ifdef LOOP_SDL
-int SDL_main(int argc, char **argv) {
-#else
 int main(int argc, char **argv) {
-#endif
     loop_initialize();
 
     struct loop_window **windows;
