@@ -1,3 +1,5 @@
+#ifdef LOOP_SDL
+
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_image.h>
@@ -286,4 +288,6 @@ void loop_window_decr(void *win) {
     if ( !( --((struct loop_window *) win)->refcount ) )
         loop_window_free((struct loop_window *) win);
 }
+
+#endif /* LOOP_SDL */
 

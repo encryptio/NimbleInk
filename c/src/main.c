@@ -52,7 +52,7 @@ static void keyevt(void *pt, struct loop_window *win, bool is_repeat, uint32_t c
     }
 }
 
-#if LOOP_SDL
+#ifdef LOOP_SDL
 int SDL_main(int argc, char **argv) {
 #else
 int main(int argc, char **argv) {
