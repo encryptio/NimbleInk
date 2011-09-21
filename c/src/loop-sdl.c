@@ -47,26 +47,8 @@ static void reshape_gl(int w, int h) {
     glViewport(0,0,w,h);
 }
 
-static void set_window_name(struct zipper *z) {
-    char name[1000];
-    struct zipper_pos *pos = &(z->pos[z->pos_at]);
-    if ( pos->ar.is )
-        snprintf(name, 1000, "%s: (%d/%d) %s", pos->path, pos->ar.pos+1, pos->ar.ar->files, pos->ar.ar->names[pos->ar.ar->map[pos->ar.pos]]);
-    else {
-        strncpy(name, pos->path, 1000);
-        name[999] = '\0';
-    }
-
-    // sanitize (OSX yells otherwise)
-    int mv = 0;
-    int i;
-    for (i = 0; name[i]; i++)
-        if ( !isprint(name[i]) )
-            mv++;
-        else
-            name[i-mv] = name[i];
-    name[i-mv] = '\0';
-
+void loop_window_set_title(struct loop_window *win, const char *name) {
+    // woo, only one possible window. how stupid.
     SDL_WM_SetCaption(name, name);
 }
 
@@ -283,8 +265,6 @@ struct loop_window *loop_window_open(
 
     win->gl = glview_create();
     glview_set_zipper(win->gl, win->z);
-
-    set_window_name(win->z);
 
     loop_window_decr_q(win);
     return win;

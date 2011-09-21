@@ -67,6 +67,7 @@ struct zipper * loop_window_get_zipper(struct loop_window *win);
 struct glview * loop_window_get_glview(struct loop_window *win);
 void loop_window_set_fullscreen(struct loop_window *win, bool fullscreen);
 bool loop_window_get_fullscreen(struct loop_window *win);
+void loop_window_set_title(struct loop_window *win, const char *name);
 
 // event helpers
 const char * loop_keyname(uint32_t ch);
