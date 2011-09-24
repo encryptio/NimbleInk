@@ -88,8 +88,6 @@ bool archive_load_toc_rar(struct archive *ar) {
         ar->sizes[ar->files] = size;
         ar->data[ar->files] = NULL;
 
-        fprintf(stderr, "got file: %d bytes, filename \"%s\"\n", ar->sizes[ar->files], ar->names[ar->files]);
-
         ar->files++;
     }
 

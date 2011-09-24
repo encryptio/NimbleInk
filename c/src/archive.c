@@ -96,8 +96,6 @@ static bool archive_load_toc(struct archive *ar) {
 
 bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
     for (int i = 0; i < ar->files; i++) {
-        printf("loading %d bytes for file %d, name \"%s\"\n", ar->sizes[i], i, ar->names[i]);
-
         void *new_data;
         if ( (new_data = malloc(ar->sizes[i])) == NULL )
             err(1, "Couldn't malloc space for file");
@@ -141,8 +139,6 @@ bool archive_load_all_from_command(struct archive *ar, char *cmd) {
 }
 
 bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which) {
-    printf("loading %d bytes for file %d, name \"%s\"\n", ar->sizes[which], which, ar->names[which]);
-
     void *new_data;
     if ( (new_data = malloc(ar->sizes[which])) == NULL )
         err(1, "Couldn't malloc space for file");
