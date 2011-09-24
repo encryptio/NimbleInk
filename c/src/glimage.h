@@ -9,8 +9,6 @@
 
 #include <SDL_opengl.h>
 
-extern bool image_multidraw;
-
 struct glimage {
     int refcount;
 
@@ -28,7 +26,7 @@ struct glimage {
 };
 
 struct glimage * glimage_from_cpuimage(struct cpuimage *i);
-void glimage_draw(struct glimage *gl, float cx, float cy, float width, float height, float pixel_size);
+void glimage_draw(struct glimage *gl, float cx, float cy, float width, float height, float pixel_size, bool multidraw);
 
 void glimage_incr(void *gl);
 void glimage_decr(void *gl);

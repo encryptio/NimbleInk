@@ -59,7 +59,7 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
     return gl;
 }
 
-void glimage_draw(struct glimage *gl, float cx, float cy, float width, float height, float pixel_size) {
+void glimage_draw(struct glimage *gl, float cx, float cy, float width, float height, float pixel_size, bool multidraw) {
     float x1 = cx - width/2;
     float x2 = cx + width/2;
     float y1 = cy - height/2;
@@ -79,7 +79,7 @@ void glimage_draw(struct glimage *gl, float cx, float cy, float width, float hei
             double r = x1 + x_step*(sx+1);
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
-            if ( image_multidraw && (width/pixel_size < gl->w || height/pixel_size < gl->h) ) {
+            if ( multidraw && (width/pixel_size < gl->w || height/pixel_size < gl->h) ) {
 #ifndef MULTIDRAW_SIZE
 #define MULTIDRAW_SIZE 2
 #endif

@@ -26,6 +26,7 @@ struct glview *glview_create(void) {
         err(1, "Couldn't allocate space for glview");
 
     gl->rot_anim_completeness = 1;
+    gl->multidraw = true;
 
     return gl;
 }
@@ -90,7 +91,7 @@ void glview_draw(struct glview *gl) {
             glPushMatrix();
             glTranslatef(gl->w/2, gl->h/2, 0);
             glRotatef(gl->rot_at*90, 0,0,1);
-            glimage_draw(img, 0, 0, w, h, 1);
+            glimage_draw(img, 0, 0, w, h, 1, gl->multidraw && (!glview_animating(gl)));
             glPopMatrix();
         } else {
             // TODO: draw a "broken image" image
@@ -100,6 +101,10 @@ void glview_draw(struct glview *gl) {
         // TODO: draw a "no image" image
         fprintf(stderr, "[glview] no zipper to draw\n");
     }
+}
+
+bool glview_animating(struct glview *gl) {
+    return (gl->rot_anim_completeness < 1);
 }
 
 bool glview_animate(struct glview *gl, float s) {

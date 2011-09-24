@@ -17,6 +17,8 @@ struct glview {
     float rot_anim_from;
     float rot_anim_completeness;
     float rot_at;
+
+    bool multidraw;
 };
 
 struct glview *glview_create(void);
@@ -27,5 +29,6 @@ void glview_set_rotate(struct glview *gl, int direction);
 
 void glview_draw(struct glview *gl);
 bool glview_animate(struct glview *gl, float s);
+bool glview_animating(struct glview *gl);
 
 #endif

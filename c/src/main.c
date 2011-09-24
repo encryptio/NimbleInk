@@ -48,7 +48,8 @@ static void keyevt(void *pt, struct loop_window *win, bool is_repeat, uint32_t c
     } else if ( ch == 'q' ) {
         loop_set_quit();
     } else if ( ch == 'm' ) {
-        image_multidraw = !image_multidraw;
+        struct glview *gl = loop_window_get_glview(win);
+        gl->multidraw = !gl->multidraw;
     } else if ( ch == 'f' ) {
         loop_window_set_fullscreen(win, !loop_window_get_fullscreen(win));
     } else if ( ch == 'r' ) {
