@@ -1,0 +1,82 @@
+add native loops (x11, osx)
+    support multiple gl contexts wrt gc
+    support multiple windows/zippers
+    remove SDL
+    support file open dialog boxes
+        x11: gtk?
+
+consider windows support
+    archivers must be internal or redesigned to use temporary files
+    zip archives probably internal, rar probably external
+
+consider 7z support
+    including fallback from other archive loaders
+
+figure out byte ordering in image loaders
+
+consider multithreaded preloading of images
+
+consider bulk preloading in situations where it's likely that the user will view the entire file
+
+support unloading of archive data
+
+flush cached data out when the app loses focus for a while
+
+support libpng
+
+support libtiff
+
+remove sdl_image
+
+consider supporting os-specific image loading (osx)
+
+consider supporting imagemagick conversion based image loading
+    multithreadedness required
+
+fix giflib loading of interlaced images
+
+make archive lists dynamically allocated
+
+add debug option checking gl error codes
+
+cache (sorted) directory listings for a short period of time
+
+fix pnm loading
+    works for the common cases, but freaks out with the non-8-bit-pgm/ppm files
+
+switch to a sane build system
+
+add key to display the current file/archive location
+    automatically display when switching between archives/directories
+
+show a progress indicator if we're waiting on the disk/image loading library for a long period of time
+
+display notification arrows when the edge of a zipper is hit
+
+two-up page display
+    manga and american page ordering
+    spread image support (images wider than tall are displayed individually)
+
+support mouse display
+
+support user configuration
+    key bindings
+    default page ordering in 2-up mode
+    background color(s?)
+        consider automatic background coloring based on image edge color
+    consider lua scripting for input
+
+consider mipmap option for antialiasing (especially for transparent images)
+
+add options for gpu ram constrained systems (only load actively displayed images to the gpu)
+
+display "broken" image when an image/archive cannot be loaded
+    lock filename display on while displaying this
+
+ask for confirmation when loading large (more than a few megs) "images"
+
+consider sorting improvements:
+    use unicode (auto-detect, utf-8, consider windows being utf-16)
+    skip punctuation
+    skip spaces?
+
