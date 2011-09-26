@@ -116,11 +116,20 @@ static int loop_map_keycode(int sdl_code) {
     }
 }
 
-static void loop_post_keydown(int sdl_code) {
+static void loop_post_keydown(int sdl_code, int sdl_mods) {
     if ( main_win && main_win->keyevt ) {
         int loop_code = loop_map_keycode(sdl_code);
         if ( loop_code <= 0 ) return;
-        main_win->keyevt(main_win->pt, main_win, false, loop_code, 0); // TODO: modifier keys
+
+        uint8_t mods = 0;
+
+        // XXX: does not handle command key correctly on OSX
+        if ( sdl_mods & KMOD_CTRL ) mods |= LMOD_CTRL;
+        if ( sdl_mods & KMOD_SHIFT ) mods |= LMOD_SHIFT;
+        if ( sdl_mods & KMOD_ALT ) mods |= LMOD_ALT;
+        if ( sdl_mods & KMOD_META ) mods |= LMOD_LOGO;
+
+        main_win->keyevt(main_win->pt, main_win, false, loop_code, mods);
     }
 }
 
@@ -159,7 +168,7 @@ void loop_until_quit(void) {
         if ( (redraw_desired || loop_desired) ? SDL_PollEvent(&evt) : SDL_WaitEvent(&evt) ) {
             switch ( evt.type ) {
                 case SDL_KEYDOWN:
-                    loop_post_keydown( evt.key.keysym.sym );
+                    loop_post_keydown( evt.key.keysym.sym, evt.key.keysym.mod );
                     redraw_desired = true;
                     break;
 
