@@ -80,3 +80,5 @@ consider sorting improvements:
     skip punctuation
     skip spaces?
 
+add "scan" mode - shows thumbnails of all images in the zipper around the current point
+
