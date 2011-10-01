@@ -19,35 +19,35 @@ void str_append_quoted_as_unzip_file_literal(char *dst, const char *src, size_t 
     while ( *src && ct < n ) {
         switch ( *src ) {
             case '\'':
-            if ( ct+4 < n ) {
-                dst[ct++] = '\'';
-                dst[ct++] = '\\';
-                dst[ct++] = '\'';
-                dst[ct++] = '\'';
-                src++;
-            } else {
-                goto CLOSESTR;
-            }
-            break;
-
-        case '[':
-        case '?':
-        case '*':
-            if ( src > last_src_slash ) {
-                if ( ct+3 < n ) {
-                    dst[ct++] = '[';
-                    dst[ct++] = *src++;
-                    dst[ct++] = ']';
+                if ( ct+4 < n ) {
+                    dst[ct++] = '\'';
+                    dst[ct++] = '\\';
+                    dst[ct++] = '\'';
+                    dst[ct++] = '\'';
+                    src++;
                 } else {
                     goto CLOSESTR;
                 }
                 break;
-            }
 
-            /* FALLTHROUGH */
+            case '[':
+            case '?':
+            case '*':
+                if ( src > last_src_slash ) {
+                    if ( ct+3 < n ) {
+                        dst[ct++] = '[';
+                        dst[ct++] = *src++;
+                        dst[ct++] = ']';
+                    } else {
+                        goto CLOSESTR;
+                    }
+                    break;
+                }
 
-        default:
-            dst[ct++] = *src++;
+                /* FALLTHROUGH */
+
+            default:
+                dst[ct++] = *src++;
         }
     }
 
