@@ -33,7 +33,7 @@ void str_append_quoted_as_unzip_file_literal(char *dst, const char *src, size_t 
             case '[':
             case '?':
             case '*':
-                if ( src > last_src_slash ) {
+                if ( src >= last_src_slash ) {
                     if ( ct+3 < n ) {
                         dst[ct++] = '[';
                         dst[ct++] = *src++;
