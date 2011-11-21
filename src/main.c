@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
     loop_until_quit();
 
     ref_release_pool(); // last chance
+    free(windows);
 
     return 0;
 }
