@@ -66,7 +66,7 @@ void loop_set_quit(void) {
     running = false;
 }
 
-void loop_initialize(void) {
+void loop_initialize(int *argc, char ***argv) {
     if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0 )
         errx(1, "Couldn't initialize SDL: %s", SDL_GetError());
 

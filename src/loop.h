@@ -46,7 +46,7 @@ typedef bool (*loop_fn_want_immediate)(void *pt, struct loop_window *win);
 typedef void (*loop_fn_key_event)(void *pt, struct loop_window *win, bool is_repeat, uint32_t ch, uint8_t mods);
 
 // MUST be called before any other loop_* functions are called
-void loop_initialize(void);
+void loop_initialize(int *argc, char ***argv);
 void loop_until_quit(void);
 void loop_set_quit(void);
 

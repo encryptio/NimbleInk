@@ -58,7 +58,7 @@ static void keyevt(void *pt, struct loop_window *win, bool is_repeat, uint32_t c
 }
 
 int main(int argc, char **argv) {
-    loop_initialize();
+    loop_initialize(&argc, &argv);
 
     struct loop_window **windows;
     if ( (windows = calloc(1, sizeof(struct loop_window *)*argc)) == NULL )
