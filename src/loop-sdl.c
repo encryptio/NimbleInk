@@ -80,6 +80,9 @@ void loop_initialize(int *argc, char ***argv) {
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
     loop_setup_keypairs();
+
+    if ( SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL) )
+        errx(1, "Couldn't enable key repeating: %s", SDL_GetError());
 }
 
 static int loop_map_keycode(int sdl_code) {
