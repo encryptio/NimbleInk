@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "`uname`" == "Linux" ]; then
-    LINK="`sdl-config --libs` -lSDL_image -lGL -lGLU"
+    LINK="`sdl-config --libs` -lSDL_image -lGL -lGLU -lm"
     COMPILE="`sdl-config --cflags` -D_GNU_SOURCE"
 elif [ "`uname`" == "Darwin" ]; then
     LINK="-framework OpenGL /opt/local/lib/libSDL.a /opt/local/lib/libSDL_image.a /opt/local/lib/libSDLmain.a -framework Cocoa -framework CoreAudio -framework AudioUnit -framework IOKit -framework Carbon"
@@ -10,7 +10,7 @@ else
     echo "Don't know how to compile on `uname`";
 fi
 
-LINK="$LINK dep/build/libjpeg.a dep/build/libgif.a"
+LINK="$LINK -ljpeg -lgif"
 
 COMPILE="-Wall -O2 -std=c99 -g $COMPILE -Idep/build"
 COMPILE="$COMPILE -DENABLE_LIBJPEG -DENABLE_GIFLIB -DENABLE_PNM -DENABLE_SDL_IMAGE"
