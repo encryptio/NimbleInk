@@ -1,18 +1,16 @@
 cmake_minimum_required(VERSION 2.6)
 project(NimbleInk)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -std=c99 -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -g -std=c99 -Wall")
 add_definitions(-D_GNU_SOURCE)
-
-add_definitions(-DLOOP_SDL)
 
 find_package(OpenGL REQUIRED)
 link_libraries(${OPENGL_LIBRARIES})
 include_directories(${OPENGL_INCLUDE_DIR})
 
-find_package(SDL REQUIRED)
-link_libraries(${SDL_LIBRARY})
-include_directories(${SDL_INCLUDE_DIR})
+find_package(Lua51 REQUIRED)
+link_libraries(${LUA_LIBRARIES})
+include_directories(${LUA_INCLUDE_DIR})
 
 find_package(JPEG)
 if (JPEG_FOUND)
@@ -38,31 +36,17 @@ endif (SDLIMAGE_FOUND)
 add_definitions(-DENABLE_PNM)
 
 set(IMAGE_SOURCES
-    image-giflib.c
-    image-libjpeg.c
-    image-pnm.c
-    image-sdl_image.c
+#    image-giflib.c
+#    image-libjpeg.c
+#    image-pnm.c
+#    image-sdl_image.c
 )
 
 set(SOURCES
     ${IMAGE_SOURCES}
-    archive.c
-    archive-unrar.c
-    archive-unzip.c
-    cpuimage.c
-    english.c
-    filetype.c
-    glimage.c
-    glview.c
-    loop-common.c
-    loop-sdl.c
-    reference.c
-    stringutils.c
-    zipper.c
+    lua-bind.c
 )
 
 link_libraries(m)
 add_executable(nink ${SOURCES} main.c)
-add_executable(nink-imagedebug ${SOURCES} main-imagedebug.c)
-add_executable(nink-sorttest english.c main-sorttest.c)
 
