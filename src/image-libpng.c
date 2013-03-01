@@ -69,77 +69,60 @@ bool cpuimage_load_from_ram_libpng(void *ptr, int len, struct cpuimage *i) {
 
     int y_range, x_range;
 
+    int channel_count;
+    enum cpuimage_pixel_format pixfmt;
+
     switch (png_get_color_type(png_ptr, info_ptr)) {
         case PNG_COLOR_TYPE_RGBA:
-            cpuimage_setup_cpu_wh(i, png_get_image_width(png_ptr, info_ptr), png_get_image_height(png_ptr, info_ptr), CPUIMAGE_RGBA);
-
-            for (int sy = 0; sy < i->s_h; sy++) {
-                y_range = IMAGE_SLICE_SIZE;
-                if ( (sy+1)*IMAGE_SLICE_SIZE-1 >= i->h )
-                    y_range = i->h - sy*IMAGE_SLICE_SIZE;
-
-                for (int sx = 0; sx < i->s_w; sx++) {
-                    x_range = IMAGE_SLICE_SIZE;
-                    if ( (sx+1)*IMAGE_SLICE_SIZE-1 >= i->w )
-                        x_range = i->w - sx*IMAGE_SLICE_SIZE;
-
-                    for (int y = 0; y < y_range; y++) {
-                        uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*4;
-                        uint8_t *row = slice + IMAGE_SLICE_SIZE * y * 4;
-                        memcpy(row, row_pointers[y+sy*IMAGE_SLICE_SIZE] + sx*IMAGE_SLICE_SIZE*4, x_range*4);
-
-                        if ( x_range < IMAGE_SLICE_SIZE )
-                            memset(row+x_range*4, 0, (IMAGE_SLICE_SIZE-x_range)*4);
-                    }
-
-                    if ( y_range < IMAGE_SLICE_SIZE ) {
-                        for (int y = y_range; y < IMAGE_SLICE_SIZE; y++) {
-                            uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*4;
-                            uint8_t *row = slice + IMAGE_SLICE_SIZE*y*4;
-                            memset(row, 0, IMAGE_SLICE_SIZE*4);
-                        }
-                    }
-                }
-            }
+            channel_count = 4;
+            pixfmt = CPUIMAGE_RGBA;
             break;
 
         case PNG_COLOR_TYPE_RGB:
-            cpuimage_setup_cpu_wh(i, png_get_image_width(png_ptr, info_ptr), png_get_image_height(png_ptr, info_ptr), CPUIMAGE_RGB);
+            channel_count = 3;
+            pixfmt = CPUIMAGE_RGB;
+            break;
 
-            for (int sy = 0; sy < i->s_h; sy++) {
-                y_range = IMAGE_SLICE_SIZE;
-                if ( (sy+1)*IMAGE_SLICE_SIZE-1 >= i->h )
-                    y_range = i->h - sy*IMAGE_SLICE_SIZE;
-
-                for (int sx = 0; sx < i->s_w; sx++) {
-                    x_range = IMAGE_SLICE_SIZE;
-                    if ( (sx+1)*IMAGE_SLICE_SIZE-1 >= i->w )
-                        x_range = i->w - sx*IMAGE_SLICE_SIZE;
-
-                    for (int y = 0; y < y_range; y++) {
-                        uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*3;
-                        uint8_t *row = slice + IMAGE_SLICE_SIZE * y * 3;
-                        memcpy(row, row_pointers[y+sy*IMAGE_SLICE_SIZE] + sx*IMAGE_SLICE_SIZE*3, x_range*3);
-
-                        if ( x_range < IMAGE_SLICE_SIZE )
-                            memset(row+x_range*3, 0, (IMAGE_SLICE_SIZE-x_range)*3);
-                    }
-
-                    if ( y_range < IMAGE_SLICE_SIZE ) {
-                        for (int y = y_range; y < IMAGE_SLICE_SIZE; y++) {
-                            uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*3;
-                            uint8_t *row = slice + IMAGE_SLICE_SIZE*y*3;
-                            memset(row, 0, IMAGE_SLICE_SIZE*3);
-                        }
-                    }
-                }
-            }
+        case PNG_COLOR_TYPE_GRAY:
+            channel_count = 1;
+            pixfmt = CPUIMAGE_GRAY;
             break;
 
         default:
             fprintf(stderr, "Cannot load the unsupported png color type %d\n", png_get_color_type(png_ptr, info_ptr));
             ret = false;
             goto DESTROY;
+    }
+
+    cpuimage_setup_cpu_wh(i, png_get_image_width(png_ptr, info_ptr), png_get_image_height(png_ptr, info_ptr), pixfmt);
+
+    for (int sy = 0; sy < i->s_h; sy++) {
+        y_range = IMAGE_SLICE_SIZE;
+        if ( (sy+1)*IMAGE_SLICE_SIZE-1 >= i->h )
+            y_range = i->h - sy*IMAGE_SLICE_SIZE;
+
+        for (int sx = 0; sx < i->s_w; sx++) {
+            x_range = IMAGE_SLICE_SIZE;
+            if ( (sx+1)*IMAGE_SLICE_SIZE-1 >= i->w )
+                x_range = i->w - sx*IMAGE_SLICE_SIZE;
+
+            for (int y = 0; y < y_range; y++) {
+                uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*channel_count;
+                uint8_t *row = slice + IMAGE_SLICE_SIZE * y * channel_count;
+                memcpy(row, row_pointers[y+sy*IMAGE_SLICE_SIZE] + sx*IMAGE_SLICE_SIZE*channel_count, x_range*channel_count);
+
+                if ( x_range < IMAGE_SLICE_SIZE )
+                    memset(row+x_range*channel_count, 0, (IMAGE_SLICE_SIZE-x_range)*channel_count);
+            }
+
+            if ( y_range < IMAGE_SLICE_SIZE ) {
+                for (int y = y_range; y < IMAGE_SLICE_SIZE; y++) {
+                    uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*channel_count;
+                    uint8_t *row = slice + IMAGE_SLICE_SIZE*y*channel_count;
+                    memset(row, 0, IMAGE_SLICE_SIZE*channel_count);
+                }
+            }
+        }
     }
 
 DESTROY:
