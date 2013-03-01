@@ -10,6 +10,9 @@ ENABLE_GIFLIB (default)
 ENABLE_PNM (default)
     enables support for pbm/pgm/ppm files.
 
+ENABLE_LIBPNG (default)
+    enables support for libpng.
+
 ENABLE_SDL_IMAGE
     enables support for the SDL_image library.
 
