@@ -22,8 +22,6 @@ support unloading of archive data
 
 flush cached data out when the app loses focus for a while
 
-support libpng
-
 support libtiff
 
 remove sdl_image
