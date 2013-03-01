@@ -46,7 +46,7 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
         int channels;
         switch ( i->pf ) {
             case CPUIMAGE_GRAY:
-                target_internal_format = GL_RED;
+                target_internal_format = GL_LUMINANCE;
                 source_format = GL_LUMINANCE;
                 channels = 1;
                 break;
