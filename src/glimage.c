@@ -102,11 +102,21 @@ void glimage_draw(struct glimage *gl, float cx, float cy, float width, float hei
     float y_step = (y2-y1)/(gl->s_h - ((float) gl->s_h*IMAGE_SLICE_SIZE - gl->h)/IMAGE_SLICE_SIZE);
 
     for (int sy = 0; sy < gl->s_h; sy++) {
+        double y_partial = 1;
+        if ( sy == gl->s_h-1 )
+            y_partial = ((double) gl->h - ((double) gl->s_h-1)*IMAGE_SLICE_SIZE)/IMAGE_SLICE_SIZE;
+
         double b = y1 + y_step* sy;
-        double t = y1 + y_step*(sy+1);
+        double t = y1 + y_step*(sy+y_partial);
+
         for (int sx = 0; sx < gl->s_w; sx++) {
+            double x_partial = 1;
+            if ( sx == gl->s_w-1 )
+                x_partial = ((double) gl->w - ((double) gl->s_w-1)*IMAGE_SLICE_SIZE)/IMAGE_SLICE_SIZE;
+
             double l = x1 + x_step* sx;
-            double r = x1 + x_step*(sx+1);
+            double r = x1 + x_step*(sx+x_partial);
+
             glBindTexture(GL_TEXTURE_2D, gl->slices[slice]);
 
             if ( multidraw && (width/pixel_size < gl->w || height/pixel_size < gl->h) ) {
@@ -128,14 +138,14 @@ void glimage_draw(struct glimage *gl, float cx, float cy, float width, float hei
                             glColor4f(1,1,1,1.0/(drawn+1));
 
                             glBegin(GL_QUADS);
-                            glTexCoord2i(0,0); glVertex2f(l + dx*md_factor,
-                                                          b + dy*md_factor);
-                            glTexCoord2i(1,0); glVertex2f(r + dx*md_factor,
-                                                          b + dy*md_factor);
-                            glTexCoord2i(1,1); glVertex2f(r + dx*md_factor,
-                                                          t + dy*md_factor);
-                            glTexCoord2i(0,1); glVertex2f(l + dx*md_factor,
-                                                          t + dy*md_factor);
+                            glTexCoord2f(0,0);
+                            glVertex2f(l + dx*md_factor, b + dy*md_factor);
+                            glTexCoord2f(x_partial,0);
+                            glVertex2f(r + dx*md_factor, b + dy*md_factor);
+                            glTexCoord2f(x_partial,y_partial);
+                            glVertex2f(r + dx*md_factor, t + dy*md_factor);
+                            glTexCoord2f(0,y_partial);
+                            glVertex2f(l + dx*md_factor, t + dy*md_factor);
                             glEnd();
 
                             drawn++;
@@ -144,10 +154,14 @@ void glimage_draw(struct glimage *gl, float cx, float cy, float width, float hei
                 // CCW from bottom left
                 glColor3f(1,1,1);
                 glBegin(GL_QUADS);
-                glTexCoord2i(0,0); glVertex2f(l,b);
-                glTexCoord2i(1,0); glVertex2f(r,b);
-                glTexCoord2i(1,1); glVertex2f(r,t);
-                glTexCoord2i(0,1); glVertex2f(l,t);
+                glTexCoord2f(0,0);
+                glVertex2f(l,b);
+                glTexCoord2f(x_partial,0);
+                glVertex2f(r,b);
+                glTexCoord2f(x_partial,y_partial);
+                glVertex2f(r,t);
+                glTexCoord2f(0,y_partial);
+                glVertex2f(l,t);
                 glEnd();
             }
 
