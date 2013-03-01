@@ -99,6 +99,8 @@ static int cpuimage_channel_count_for_pixel_format(enum cpuimage_pixel_format pf
     switch (pf) {
         case CPUIMAGE_GRAY:
             return 1;
+        case CPUIMAGE_GRAYA:
+            return 2;
         case CPUIMAGE_RGB:
         case CPUIMAGE_BGR:
             return 3;

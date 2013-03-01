@@ -11,6 +11,7 @@
 
 enum cpuimage_pixel_format {
     CPUIMAGE_GRAY,
+    CPUIMAGE_GRAYA,
     CPUIMAGE_RGB,
     CPUIMAGE_BGR,
     CPUIMAGE_RGBA,

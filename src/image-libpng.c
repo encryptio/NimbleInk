@@ -88,6 +88,11 @@ bool cpuimage_load_from_ram_libpng(void *ptr, int len, struct cpuimage *i) {
             pixfmt = CPUIMAGE_GRAY;
             break;
 
+        case PNG_COLOR_TYPE_GRAY_ALPHA:
+            channel_count = 2;
+            pixfmt = CPUIMAGE_GRAYA;
+            break;
+
         default:
             fprintf(stderr, "Cannot load the unsupported png color type %d\n", png_get_color_type(png_ptr, info_ptr));
             ret = false;

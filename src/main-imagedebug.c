@@ -65,6 +65,11 @@ int main(int argc, char **argv) {
                         r = g = b = slicebase[i];
                         a = 0xff;
                         break;
+
+                    case CPUIMAGE_GRAYA:
+                        r = g = b = slicebase[i*2];
+                        a = slicebase[i*2+1];
+                        break;
                 }
 
                 if ( a < 255 ) {

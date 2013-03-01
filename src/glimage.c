@@ -51,6 +51,12 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
                 channels = 1;
                 break;
 
+            case CPUIMAGE_GRAYA:
+                target_internal_format = GL_LUMINANCE_ALPHA;
+                source_format = GL_LUMINANCE_ALPHA;
+                channels = 2;
+                break;
+
             case CPUIMAGE_RGB:
                 target_internal_format = GL_RGB;
                 source_format = GL_RGB;
