@@ -43,30 +43,36 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
 
         GLint target_internal_format;
         GLint source_format;
+        int channels;
         switch ( i->pf ) {
             case CPUIMAGE_GRAY:
                 target_internal_format = GL_RED;
                 source_format = GL_LUMINANCE;
+                channels = 1;
                 break;
 
             case CPUIMAGE_RGB:
                 target_internal_format = GL_RGB;
                 source_format = GL_RGB;
+                channels = 3;
                 break;
 
             case CPUIMAGE_BGR:
                 target_internal_format = GL_RGB;
                 source_format = GL_BGR;
+                channels = 3;
                 break;
 
             case CPUIMAGE_RGBA:
                 target_internal_format = GL_RGBA;
                 source_format = GL_RGBA;
+                channels = 4;
                 break;
 
             case CPUIMAGE_BGRA:
                 target_internal_format = GL_RGBA;
                 source_format = GL_BGRA;
+                channels = 4;
                 break;
 
             default:
@@ -80,7 +86,7 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
 #else
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, target_internal_format, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, 0, source_format, GL_UNSIGNED_BYTE, i->slices + 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
+        glTexImage2D(GL_TEXTURE_2D, 0, target_internal_format, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, 0, source_format, GL_UNSIGNED_BYTE, i->slices + channels*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
 #endif
 
         // TODO: check glGetError
