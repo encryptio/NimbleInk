@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(NimbleInk)
 
+# work around a retarded cmake misconfiguration by default
+set(CMAKE_FIND_FRAMEWORK LAST)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -std=c99 -Wall")
 add_definitions(-D_GNU_SOURCE)
 
@@ -28,6 +31,14 @@ if (GIF_FOUND)
     add_definitions(-DENABLE_GIFLIB)
 endif (GIF_FOUND)
 
+find_package(PNG)
+if (PNG_FOUND)
+    link_libraries(${PNG_LIBRARY})
+    include_directories(${PNG_PNG_INCLUDE_DIR})
+    add_definitions(${PNG_DEFINITIONS})
+    add_definitions(-DENABLE_LIBPNG)
+endif (PNG_FOUND)
+
 find_package(SDL_image)
 if (SDLIMAGE_FOUND)
     link_libraries(${SDLIMAGE_LIBRARY})
@@ -40,6 +51,7 @@ add_definitions(-DENABLE_PNM)
 set(IMAGE_SOURCES
     image-giflib.c
     image-libjpeg.c
+    image-libpng.c
     image-pnm.c
     image-sdl_image.c
 )

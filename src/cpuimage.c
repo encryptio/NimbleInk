@@ -2,6 +2,7 @@
 
 #include "image-libjpeg.h"
 #include "image-giflib.h"
+#include "image-libpng.h"
 #include "image-sdl_image.h"
 #include "image-pnm.h"
 
@@ -78,6 +79,10 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
     if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_pnm((uint8_t*) ptr) )
         ret = cpuimage_load_from_ram_pnm(ptr, len, i);
 #endif
+#if ENABLE_LIBPNG
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_png((uint8_t*) ptr) )
+        ret = cpuimage_load_from_ram_libpng(ptr, len, i);
+#endif
 #if ENABLE_SDL_IMAGE
     if ( !ret )
         ret = cpuimage_load_from_ram_sdl_image(ptr, len, i);
@@ -105,8 +110,8 @@ bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h) {
         err(1, "Couldn't allocate space for image");
 
 #if DEBUG_RANDOMIZE_SLICES
-    for (int j = 0; j < 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h/sizeof(long); j++)
-        ((long*) i->slices)[j] = random();
+    for (int j = 0; j < 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h; j++)
+        ((uint8_t*) i->slices)[j] = random() & 0xff;
 #endif
 
     return true;
