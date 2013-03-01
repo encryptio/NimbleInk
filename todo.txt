@@ -42,8 +42,6 @@ cache (sorted) directory listings for a short period of time
 fix pnm loading
     works for the common cases, but freaks out with the non-8-bit-pgm/ppm files
 
-switch to a sane build system
-
 add key to display the current file/archive location
     automatically display when switching between archives/directories
 
