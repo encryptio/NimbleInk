@@ -165,6 +165,8 @@ void glimage_draw(struct glimage *gl, float cx, float cy, float width, float hei
             slice++;
         }
     }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 static void glimage_free(struct glimage *gl) {
