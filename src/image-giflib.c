@@ -43,11 +43,10 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
         goto DESTROY;
     }
 
-    if ( !cpuimage_setup_cpu_wh(i, gif->SWidth, gif->SHeight) ) {
+    if ( !cpuimage_setup_cpu_wh(i, gif->SWidth, gif->SHeight, CPUIMAGE_BGRA) ) {
         warnx("Couldn't set w/h for gif file\n");
         goto DESTROY;
     }
-    i->is_bgra = true;
 
     struct SavedImage *img = gif->SavedImages;
     ColorMapObject *map = img->ImageDesc.ColorMap;

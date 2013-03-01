@@ -95,22 +95,40 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
     return ret ? i : NULL;
 }
 
-bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h) {
+static int cpuimage_channel_count_for_pixel_format(enum cpuimage_pixel_format pf) {
+    switch (pf) {
+        case CPUIMAGE_GRAY:
+            return 1;
+        case CPUIMAGE_RGB:
+        case CPUIMAGE_BGR:
+            return 3;
+        case CPUIMAGE_RGBA:
+        case CPUIMAGE_BGRA:
+            return 4;
+        default:
+            errx(1, "Unknown pixel format value %d", pf);
+    }
+}
+
+bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h, enum cpuimage_pixel_format pf) {
     i->w = w;
     i->h = h;
     i->s_w = (w + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
     i->s_h = (h + IMAGE_SLICE_SIZE - 1) / IMAGE_SLICE_SIZE;
+    i->pf = pf;
+
+    int channels = cpuimage_channel_count_for_pixel_format(pf);
 
     if ( i->s_w * i->s_h > IMAGE_MAX_SLICES ) {
         warnx("Too many slices. wanted %d (=%dx%d) slices but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, IMAGE_MAX_SLICES);
         return false;
     }
 
-    if ( (i->slices = malloc(4 * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
+    if ( (i->slices = malloc(channels * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
         err(1, "Couldn't allocate space for image");
 
 #if DEBUG_RANDOMIZE_SLICES
-    for (int j = 0; j < 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h; j++)
+    for (int j = 0; j < channels*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h; j++)
         ((uint8_t*) i->slices)[j] = random() & 0xff;
 #endif
 

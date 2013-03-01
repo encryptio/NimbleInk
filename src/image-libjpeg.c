@@ -29,11 +29,10 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
 
     jpeg_read_header(&cinfo, true);
 
-    if ( !cpuimage_setup_cpu_wh(i, cinfo.image_width, cinfo.image_height) ) {
+    if ( !cpuimage_setup_cpu_wh(i, cinfo.image_width, cinfo.image_height, CPUIMAGE_BGRA) ) {
         warn("Couldn't setup cpuimage");
         goto DESTROY;
     }
-    i->is_bgra = true;
 
     cinfo.out_color_space = JCS_RGB;
     cinfo.buffered_image = false;

@@ -40,8 +40,8 @@ static bool cpuimage_load_from_surface(SDL_Surface *surface, struct cpuimage *i)
         return ret;
     }
 
-    i->is_bgra = !(surface->format->Rmask == 0x000000ff);
-    if ( !cpuimage_setup_cpu_wh(i, surface->w, surface->h) )
+    enum cpuimage_color_space color_space = (surface->format->Rmask == 0x000000ff) ? CPUIMAGE_RGBA : CPUIMAGE_BGRA;
+    if ( !cpuimage_setup_cpu_wh(i, surface->w, surface->h, color_space) )
         return false;
 
     for (int sy = 0; sy < i->s_h; sy++)

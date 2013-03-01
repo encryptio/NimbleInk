@@ -65,7 +65,7 @@ bool cpuimage_load_from_ram_libpng(void *ptr, int len, struct cpuimage *i) {
             | PNG_TRANSFORM_EXPAND, // expand to RGB or RGBA
             NULL);
 
-    cpuimage_setup_cpu_wh(i, png_get_image_width(png_ptr, info_ptr), png_get_image_height(png_ptr, info_ptr));
+    cpuimage_setup_cpu_wh(i, png_get_image_width(png_ptr, info_ptr), png_get_image_height(png_ptr, info_ptr), CPUIMAGE_RGBA);
 
     row_pointers = png_get_rows(png_ptr, info_ptr);
 

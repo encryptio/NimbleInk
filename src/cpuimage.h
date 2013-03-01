@@ -9,6 +9,14 @@
 
 // slice order is top down, left to right (x varies fastest)
 
+enum cpuimage_pixel_format {
+    CPUIMAGE_GRAY,
+    CPUIMAGE_RGB,
+    CPUIMAGE_BGR,
+    CPUIMAGE_RGBA,
+    CPUIMAGE_BGRA
+};
+
 struct cpuimage {
     int refcount;
 
@@ -17,9 +25,9 @@ struct cpuimage {
     
     uint16_t s_w; // slices wide
     uint16_t s_h; // slices tall
-    void *slices; // always RGBA or BGRA, in slice order
+    void *slices; // in slice order
 
-    bool is_bgra; // true if the above is formatted BGRA, false if RGBA
+    enum cpuimage_pixel_format pf;
 
     uint32_t cpu_time; // ms
 
@@ -30,7 +38,7 @@ struct cpuimage * cpuimage_from_disk(char *path);
 struct cpuimage * cpuimage_from_ram(void *ptr, int len);
 
 // internal to the image_* functions
-bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h); // sets w,h and allocates slices
+bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h, enum cpuimage_pixel_format pf); // sets w,h and allocates slices
 
 void cpuimage_incr(void *i);
 void cpuimage_decr(void *i);

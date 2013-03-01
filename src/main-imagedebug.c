@@ -31,16 +31,41 @@ int main(int argc, char **argv) {
             int y = 0;
             for (int i = 0; i < IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE; i++) {
                 uint8_t r,g,b,a;
-                if ( cpu->is_bgra ) {
-                    r = slicebase[i*4+2];
-                    g = slicebase[i*4+1];
-                    b = slicebase[i*4  ];
-                } else {
-                    r = slicebase[i*4  ];
-                    g = slicebase[i*4+1];
-                    b = slicebase[i*4+2];
+
+                switch ( cpu->pf ) {
+                    case CPUIMAGE_RGBA:
+                        r = slicebase[i*4  ];
+                        g = slicebase[i*4+1];
+                        b = slicebase[i*4+2];
+                        a = slicebase[i*4+3];
+                        break;
+
+                    case CPUIMAGE_BGRA:
+                        b = slicebase[i*4  ];
+                        g = slicebase[i*4+1];
+                        r = slicebase[i*4+2];
+                        a = slicebase[i*4+3];
+                        break;
+
+                    case CPUIMAGE_RGB:
+                        r = slicebase[i*3  ];
+                        g = slicebase[i*3+1];
+                        b = slicebase[i*3+2];
+                        a = 0xff;
+                        break;
+
+                    case CPUIMAGE_BGR:
+                        b = slicebase[i*3  ];
+                        g = slicebase[i*3+1];
+                        r = slicebase[i*3+2];
+                        a = 0xff;
+                        break;
+
+                    case CPUIMAGE_GRAY:
+                        r = g = b = slicebase[i];
+                        a = 0xff;
+                        break;
                 }
-                a = slicebase[i*4+3];
 
                 if ( a < 255 ) {
                     uint8_t base_checker = ((x/16 % 2) + (y/16 % 2)) % 2 ? 192 : 64;

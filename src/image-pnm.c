@@ -84,11 +84,10 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
     // Prepare image container
 
     // XXX: on error later, free this
-    if ( !cpuimage_setup_cpu_wh(i, width, height) ) {
+    if ( !cpuimage_setup_cpu_wh(i, width, height, CPUIMAGE_BGRA) ) {
         warnx("Couldn't set w/h for PNM file\n");
         return false;
     }
-    i->is_bgra = true;
 
     ////////////////////////////////////////
     // Load image data

@@ -41,14 +41,46 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
 
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+        GLint target_internal_format;
+        GLint source_format;
+        switch ( i->pf ) {
+            case CPUIMAGE_GRAY:
+                target_internal_format = GL_RED;
+                source_format = GL_LUMINANCE;
+                break;
+
+            case CPUIMAGE_RGB:
+                target_internal_format = GL_RGB;
+                source_format = GL_RGB;
+                break;
+
+            case CPUIMAGE_BGR:
+                target_internal_format = GL_RGB;
+                source_format = GL_BGR;
+                break;
+
+            case CPUIMAGE_RGBA:
+                target_internal_format = GL_RGBA;
+                source_format = GL_RGBA;
+                break;
+
+            case CPUIMAGE_BGRA:
+                target_internal_format = GL_RGBA;
+                source_format = GL_BGRA;
+                break;
+
+            default:
+                errx(1, "Unknown internal cpuimage pixel format %d", i->pf);
+        }
+
 #ifdef USE_MIPMAPS
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // trilinear interpolation
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, 4, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, (i->is_bgra ? GL_BGRA : GL_RGBA), GL_UNSIGNED_BYTE, i->slices + 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, target_internal_format, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, source_format, GL_UNSIGNED_BYTE, i->slices + 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
 #else
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, 4, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, 0, (i->is_bgra ? GL_BGRA : GL_RGBA), GL_UNSIGNED_BYTE, i->slices + 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
+        glTexImage2D(GL_TEXTURE_2D, 0, target_internal_format, IMAGE_SLICE_SIZE, IMAGE_SLICE_SIZE, 0, source_format, GL_UNSIGNED_BYTE, i->slices + 4*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*t);
 #endif
 
         // TODO: check glGetError
