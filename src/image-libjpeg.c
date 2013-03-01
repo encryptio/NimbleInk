@@ -29,20 +29,65 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
 
     jpeg_read_header(&cinfo, true);
 
-    if ( !cpuimage_setup_cpu_wh(i, cinfo.image_width, cinfo.image_height, CPUIMAGE_BGRA) ) {
+    enum cpuimage_pixel_format target_pixfmt;
+    int slice_channels;
+    switch ( cinfo.jpeg_color_space ) {
+        case JCS_GRAYSCALE:
+            target_pixfmt = CPUIMAGE_GRAY;
+            slice_channels = 1;
+            break;
+
+        case JCS_YCbCr:
+            cinfo.out_color_space = JCS_RGB;
+        case JCS_RGB:
+            target_pixfmt = CPUIMAGE_RGB;
+            slice_channels = 3;
+            break;
+
+        case JCS_YCCK:
+            cinfo.out_color_space = JCS_CMYK;
+        case JCS_CMYK:
+            target_pixfmt = CPUIMAGE_RGB;
+            slice_channels = 3;
+            break;
+
+        case JCS_UNKNOWN:
+        default:
+            warn("[jpeg] Couldn't load jpeg: unknown color space");
+            goto DESTROY;
+    }
+
+    if ( !cpuimage_setup_cpu_wh(i, cinfo.image_width, cinfo.image_height, target_pixfmt) ) {
         warn("Couldn't setup cpuimage");
         goto DESTROY;
     }
 
-    cinfo.out_color_space = JCS_RGB;
     cinfo.buffered_image = false;
     //cinfo.do_block_smoothing = true; // ?
     // TODO: verify gamma correctness
     // TODO: consider changing iDCT method
-    
+
     jpeg_start_decompress(&cinfo);
 
-    assert(cinfo.output_components == 3); // TODO: will this ever fail?
+    switch ( cinfo.jpeg_color_space ) {
+        case JCS_GRAYSCALE:
+            assert(cinfo.output_components == 1);
+            break;
+
+        case JCS_RGB:
+        case JCS_YCbCr:
+            assert(cinfo.output_components == 3);
+            break;
+
+        case JCS_CMYK:
+        case JCS_YCCK:
+            assert(cinfo.output_components == 4);
+            break;
+
+        case JCS_UNKNOWN:
+        default:
+            errx(1, "not reached");
+    }
 
     if ( (scanlines = malloc(sizeof(JSAMPLE) * cinfo.output_width * cinfo.output_components * IMAGE_LIBJPEG_SCANLINES_PER_LOOP)) == NULL )
         err(1, "Couldn't allocate space for scanlines");
@@ -57,28 +102,45 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
         for (int dy = 0; dy < read; dy++) {
             int sy = y/IMAGE_SLICE_SIZE;
 
-            // number of bytes into the slice
-            int yoff = (y-sy*IMAGE_SLICE_SIZE) * 4 * IMAGE_SLICE_SIZE;
-            int xleft = cinfo.output_width;
-
             for (int sx = 0; sx < i->s_w; sx++) {
-                uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*4;
+                uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*slice_channels;
+                uint8_t *row = slice + (y-sy*IMAGE_SLICE_SIZE)*IMAGE_SLICE_SIZE*slice_channels;
 
-                uint8_t *this = slice + yoff;
-                for (int in_x = 0; in_x < IMAGE_SLICE_SIZE; in_x++) {
-                    // TODO: endianness
-                    this[in_x*4  ] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3+2];
-                    this[in_x*4+1] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3+1];
-                    this[in_x*4+2] = input[dy][(sx*IMAGE_SLICE_SIZE+in_x)*3  ];
-                    this[in_x*4+3] = 255;
+                int x_pixels = IMAGE_SLICE_SIZE;
+                if ( sx == i->s_w-1 )
+                    x_pixels = i->w - (i->s_w-1)*IMAGE_SLICE_SIZE;
 
-                    xleft--;
-                    if ( xleft == 0 && in_x < IMAGE_SLICE_SIZE-1 ) {
-                        memset(this + (in_x+1)*4, 0, (IMAGE_SLICE_SIZE-in_x-1)*4);
+                int x_offset = sx*IMAGE_SLICE_SIZE;
+
+                switch ( cinfo.jpeg_color_space ) {
+                    case JCS_GRAYSCALE:
+                    case JCS_YCbCr: // transformed to RGB by libjpeg
+                    case JCS_RGB:
+                        // copy unchanged into target. TODO: load directly into cpuimage buffer
+                        memcpy(row, input[dy] + x_offset*cinfo.output_components, x_pixels * slice_channels);
                         break;
-                    }
+
+                    case JCS_YCCK: // transformed to CMYK by libjpeg
+                    case JCS_CMYK:
+                        // transform into RGB
+                        for (int x = 0; x < x_pixels; x++) {
+                            int c = input[dy][(x_offset+x)*cinfo.output_components + 0];
+                            int m = input[dy][(x_offset+x)*cinfo.output_components + 1];
+                            int y = input[dy][(x_offset+x)*cinfo.output_components + 2];
+                            int k = input[dy][(x_offset+x)*cinfo.output_components + 3];
+
+                            row[x*slice_channels + 0] = c * k / 255; // r
+                            row[x*slice_channels + 1] = m * k / 255; // g
+                            row[x*slice_channels + 2] = y * k / 255; // b
+                        }
+                        break;
+
+                    case JCS_UNKNOWN:
+                    default:
+                        errx(1, "not reached");
                 }
             }
+
             y++;
         }
     }
@@ -86,9 +148,9 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
     // TODO: are we clearing the first row after the image correctly?
     int clear_rows = i->s_h*IMAGE_SLICE_SIZE - y;
     int start_clear_row = IMAGE_SLICE_SIZE - clear_rows;
-    int clear_bytes = clear_rows * IMAGE_SLICE_SIZE*4;
+    int clear_bytes = clear_rows * IMAGE_SLICE_SIZE*slice_channels;
     for (int sx = 0; sx < i->s_w; sx++)
-        memset(i->slices + (IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*4)*(sx+(i->s_h-1)*i->s_w) + start_clear_row*IMAGE_SLICE_SIZE*4, 0, clear_bytes);
+        memset(i->slices + (IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*slice_channels)*(sx+(i->s_h-1)*i->s_w) + start_clear_row*IMAGE_SLICE_SIZE*slice_channels, 0, clear_bytes);
 
     jpeg_finish_decompress(&cinfo);
 
