@@ -4,7 +4,7 @@ project(NimbleInk)
 # work around a retarded cmake misconfiguration by default
 set(CMAKE_FIND_FRAMEWORK LAST)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -std=c99 -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -std=c99 -Wall -g")
 add_definitions(-D_GNU_SOURCE)
 
 add_definitions(-DLOOP_SDL)
