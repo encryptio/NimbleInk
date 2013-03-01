@@ -145,13 +145,6 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
         }
     }
 
-    // TODO: are we clearing the first row after the image correctly?
-    int clear_rows = i->s_h*IMAGE_SLICE_SIZE - y;
-    int start_clear_row = IMAGE_SLICE_SIZE - clear_rows;
-    int clear_bytes = clear_rows * IMAGE_SLICE_SIZE*slice_channels;
-    for (int sx = 0; sx < i->s_w; sx++)
-        memset(i->slices + (IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*slice_channels)*(sx+(i->s_h-1)*i->s_w) + start_clear_row*IMAGE_SLICE_SIZE*slice_channels, 0, clear_bytes);
-
     jpeg_finish_decompress(&cinfo);
 
     ret = true;

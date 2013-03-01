@@ -115,17 +115,6 @@ bool cpuimage_load_from_ram_libpng(void *ptr, int len, struct cpuimage *i) {
                 uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*channel_count;
                 uint8_t *row = slice + IMAGE_SLICE_SIZE * y * channel_count;
                 memcpy(row, row_pointers[y+sy*IMAGE_SLICE_SIZE] + sx*IMAGE_SLICE_SIZE*channel_count, x_range*channel_count);
-
-                if ( x_range < IMAGE_SLICE_SIZE )
-                    memset(row+x_range*channel_count, 0, (IMAGE_SLICE_SIZE-x_range)*channel_count);
-            }
-
-            if ( y_range < IMAGE_SLICE_SIZE ) {
-                for (int y = y_range; y < IMAGE_SLICE_SIZE; y++) {
-                    uint8_t *slice = i->slices + IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*(sx + sy*i->s_w)*channel_count;
-                    uint8_t *row = slice + IMAGE_SLICE_SIZE*y*channel_count;
-                    memset(row, 0, IMAGE_SLICE_SIZE*channel_count);
-                }
             }
         }
     }

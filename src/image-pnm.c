@@ -244,12 +244,6 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
     //     as defined for ascii images,
     //     only use the first raster of binary images
 
-    int clear_rows = i->s_h*IMAGE_SLICE_SIZE - height;
-    int start_clear_row = IMAGE_SLICE_SIZE - clear_rows;
-    int clear_bytes = clear_rows * IMAGE_SLICE_SIZE*4;
-    for (int sx = 0; sx < i->s_w; sx++)
-        memset(i->slices + (IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*4)*(sx+(i->s_h-1)*i->s_w) + start_clear_row*IMAGE_SLICE_SIZE*4, 0, clear_bytes);
-
     return true;
 }
 

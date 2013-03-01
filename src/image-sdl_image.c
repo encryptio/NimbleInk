@@ -62,15 +62,8 @@ static bool cpuimage_load_from_surface(SDL_Surface *surface, struct cpuimage *i)
             if ( nOfColors == 4 ) {
                 // already RGBA or BGRA
 
-                if ( end_copy_column == IMAGE_SLICE_SIZE ) {
-                    for (int y = 0; y < end_copy_row; y++)
-                        memcpy(slice_base + 4*y*IMAGE_SLICE_SIZE, ((void*)surface->pixels) + (surf_y_base + y)*surface->pitch + 4*surf_x_base, 4*IMAGE_SLICE_SIZE);
-                } else {
-                    for (int y = 0; y < end_copy_row; y++) {
-                        memcpy(slice_base + 4*y*IMAGE_SLICE_SIZE, ((void*)surface->pixels) + (surf_y_base + y)*surface->pitch + 4*surf_x_base, 4*end_copy_column);
-                        memset(slice_base + 4*(y*IMAGE_SLICE_SIZE + end_copy_column), 0, 4*(IMAGE_SLICE_SIZE - end_copy_column));
-                    }
-                }
+                for (int y = 0; y < end_copy_row; y++)
+                    memcpy(slice_base + 4*y*IMAGE_SLICE_SIZE, ((void*)surface->pixels) + (surf_y_base + y)*surface->pitch + 4*surf_x_base, 4*end_copy_column);
             } else if ( nOfColors == 3 ) {
                 // RGB or BGR, need to add the alpha channel
 
@@ -86,18 +79,9 @@ static bool cpuimage_load_from_surface(SDL_Surface *surface, struct cpuimage *i)
                         sl1[(x+y*IMAGE_SLICE_SIZE)*4 + 2] = surf1[((x+surf_x_base)*3+(y+surf_y_base)*surface->pitch) + 2];
                         sl1[(x+y*IMAGE_SLICE_SIZE)*4 + 3] = 255; // alpha
                     }
-
-                    if ( end_copy_column != IMAGE_SLICE_SIZE )
-                        for (int x = end_copy_column; x < IMAGE_SLICE_SIZE; x++)
-                            sl4[x+y*IMAGE_SLICE_SIZE] = 0;
                 }
             } else {
                 errx(1, "not reached");
-            }
-
-            if ( end_copy_row != IMAGE_SLICE_SIZE ) {
-                for (int y = end_copy_row; y < IMAGE_SLICE_SIZE; y++)
-                    memset(slice_base + 4*y*IMAGE_SLICE_SIZE, 0, 4*IMAGE_SLICE_SIZE);
             }
         }
 
