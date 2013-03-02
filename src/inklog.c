@@ -41,14 +41,18 @@ void inklog_real(int priority, const char *module, const char *msg, ...) {
     char *next = msgbuf;
     int left = LOG_LINE_BUFFER_SIZE;
 
+    int len;
+
+#ifdef INKLOG_TIMESTAMPS
     // "[" timestamp "] "
     time_t clock = time(NULL);
     struct tm *tm = localtime(&clock);
-    int len = strftime(next, left-1, "[%Y-%m-%d %H:%M:%S] ", tm);
+    len = strftime(next, left-1, "[%Y-%m-%d %H:%M:%S] ", tm);
     assert(len != 0);
     left -= len;
     next += len;
     assert(left > 0);
+#endif
 
     // "(" level ") " module ": "
     len = snprintf(next, left, "(%s) %s: ", log_level_str(priority), module);
