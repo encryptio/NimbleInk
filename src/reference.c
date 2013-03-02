@@ -1,4 +1,5 @@
 #include "reference.h"
+#include "inklog.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +23,7 @@ static void ref_expand_queue(int n) {
             ref_decr_queue_alloced = 8;
 
 #if DEBUG_GC
-        fprintf(stderr, "[gc] realloc queue to %d elements\n", ref_decr_queue_alloced);
+        inklog(LOG_DEBUG, "realloc queue to %d elements", ref_decr_queue_alloced);
 #endif
 
         if ( (ref_decr_queue = realloc(ref_decr_queue, ref_decr_queue_alloced*sizeof(struct ref_queued_decrement))) == NULL )
@@ -44,7 +45,7 @@ void ref_release_pool(void) {
         return;
 
 #if DEBUG_GC
-    fprintf(stderr, "[gc] releasing %d objects\n", ref_decr_queue_used);
+    inklog(LOG_DEBUG, "releasing %d objects", ref_decr_queue_used);
     int thought = ref_decr_queue_used;
 
     int released = 0;
@@ -60,8 +61,8 @@ void ref_release_pool(void) {
         memmove(ref_decr_queue, ref_decr_queue+1, sizeof(struct ref_queued_decrement) * ref_decr_queue_used);
 
 #if DEBUG_GC
-        fprintf(stderr, "[gc] calling decr=%p over %p\n", decr, obj);
-        fprintf(stderr, "[gc]     refcount=%d\n", *((int*)obj));
+        inklog(LOG_DEBUG, "calling decr=%p over %p", decr, obj);
+        inklog(LOG_DEBUG, "    refcount=%d\n", *((int*)obj));
 #endif
 
         assert( *((int*)obj) > 0 );
@@ -75,7 +76,7 @@ void ref_release_pool(void) {
 
 #if DEBUG_GC
     if ( released != thought )
-        fprintf(stderr, "[gc] finished releasing, actually released %d objects\n", released);
+        inklog(LOG_DEBUG, "finished releasing, actually released %d objects", released);
 #endif
 }
 

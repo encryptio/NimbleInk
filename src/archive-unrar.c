@@ -1,5 +1,7 @@
 #include "archive-unrar.h"
 #include "stringutils.h"
+#include "inklog.h"
+#define INKLOG_MODULE "archive-unrar"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +10,7 @@
 #include <ctype.h>
 
 #define EXPECT(condition) if ( !(condition) ) { \
-            warnx("Condition failed in readline: %s", #condition); \
+            inklog(LOG_ERR, "Condition failed in readline: %s", #condition); \
             continue; \
         }
 
@@ -63,19 +65,12 @@ bool archive_load_toc_rar(struct archive *ar) {
         while ( isspace(*c) ) c++;
         long size = strtol(c, &c, 10);
         while ( isspace(*c) ) c++;
-        long packed = strtol(c, &c, 10);
+        strtol(c, &c, 10);
         while ( isspace(*c) ) c++;
         while ( isdigit(*c) ) c++; // percentage
 
         if ( *c != '%' ) {
-            warnx("eek");
-            continue;
-        }
-
-        // files can get bigger if compressed incorrectly; however, if the
-        // difference is too big, we've probably made a mistake.
-        if ( packed*0.9 > size ) {
-            warnx("eeek");
+            inklog(LOG_ERR, "Didn't get percentage in output of unrar");
             continue;
         }
 

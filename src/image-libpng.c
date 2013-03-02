@@ -2,6 +2,8 @@
 
 #include "image.h"
 #include "image-libpng.h"
+#include "inklog.h"
+#define INKLOG_MODULE "image-libpng"
 
 #include <string.h>
 
@@ -94,7 +96,7 @@ bool cpuimage_load_from_ram_libpng(void *ptr, int len, struct cpuimage *i) {
             break;
 
         default:
-            fprintf(stderr, "Cannot load the unsupported png color type %d\n", png_get_color_type(png_ptr, info_ptr));
+            inklog(LOG_WARNING, "Cannot load the unsupported png color type %d", png_get_color_type(png_ptr, info_ptr));
             ret = false;
             goto DESTROY;
     }

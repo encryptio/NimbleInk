@@ -1,4 +1,6 @@
 #include "glview.h"
+#include "inklog.h"
+#define INKLOG_MODULE "glview"
 
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -69,7 +71,7 @@ void glview_draw(struct glview *gl) {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    fprintf(stderr, "[glview] drawing frame %ld into %dx%d+%d,%d\n", gl->frameidx, viewport[2], viewport[3], viewport[0], viewport[1]);
+    inklog(LOG_DEBUG, "drawing frame %ld into %dx%d+%d,%d", gl->frameidx, viewport[2], viewport[3], viewport[0], viewport[1]);
     gl->frameidx++;
 
     gl->w = viewport[2];
@@ -95,11 +97,11 @@ void glview_draw(struct glview *gl) {
             glPopMatrix();
         } else {
             // TODO: draw a "broken image" image
-            fprintf(stderr, "[glview] no image to draw\n");
+            inklog(LOG_INFO, "no image to draw");
         }
     } else {
         // TODO: draw a "no image" image
-        fprintf(stderr, "[glview] no zipper to draw\n");
+        inklog(LOG_NOTICE, "no zipper to draw");
     }
 }
 

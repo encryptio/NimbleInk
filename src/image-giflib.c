@@ -1,6 +1,8 @@
 #if ENABLE_GIFLIB
 
 #include "image-giflib.h"
+#include "inklog.h"
+#define INKLOG_MODULE "image-giflib"
 
 #include <string.h>
 #include <err.h>
@@ -32,19 +34,19 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
     GifFileType *gif = DGifOpen(&ex, image_giflib_read);
 
     if ( gif == NULL ) {
-        warnx("Couldn't load gif using giflib, error code %d", GifLastError());
+        inklog(LOG_WARNING, "Couldn't open gif, error code %d", GifLastError());
         goto RETURN;
     }
 
     // XXX: possibly a bug in giflib wrt interlaced images
     // http://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg929400.html
     if ( DGifSlurp(gif) != GIF_OK ) {
-        warnx("Couldn't slurp the gif file, error code %d", GifLastError());
+        inklog(LOG_WARNING, "Couldn't slurp the gif file, error code %d", GifLastError());
         goto DESTROY;
     }
 
     if ( !cpuimage_setup_cpu_wh(i, gif->SWidth, gif->SHeight, CPUIMAGE_BGRA) ) {
-        warnx("Couldn't set w/h for gif file\n");
+        inklog(LOG_ERR, "Couldn't set w/h for gif file");
         goto DESTROY;
     }
 
@@ -55,7 +57,7 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
         map = gif->SColorMap;
 
     if ( map == NULL ) {
-        warnx("gif map is NULL");
+        inklog(LOG_ERR, "gif map is NULL");
         goto DESTROY;
     }
 
@@ -87,7 +89,7 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
 
 DESTROY:
     if ( DGifCloseFile(gif) != GIF_OK )
-        warnx("Couldn't DGifCloseFile(%p)", gif);
+        inklog(LOG_CRIT, "Couldn't DGifCloseFile(%p)", gif);
 
 RETURN:
 

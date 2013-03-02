@@ -71,6 +71,7 @@ set(SOURCES
     reference.c
     stringutils.c
     zipper.c
+    inklog.c
 )
 
 link_libraries(m)
