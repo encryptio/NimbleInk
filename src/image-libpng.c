@@ -120,8 +120,13 @@ bool cpuimage_load_from_ram_libpng(void *ptr, int len, struct cpuimage *i) {
     }
 
 DESTROY:
-    if ( png_ptr != NULL )
-        png_destroy_read_struct(&png_ptr, NULL, NULL);
+    if ( png_ptr != NULL ) {
+        if ( info_ptr != NULL ) {
+            png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        } else {
+            png_destroy_read_struct(&png_ptr, NULL, NULL);
+        }
+    }
 
     return ret;
 }
