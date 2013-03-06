@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #define ARCHIVE_MAX_FILES 5000
 
@@ -23,7 +24,7 @@ struct archive {
 
     // TODO: make dynamic
     char names[ARCHIVE_MAX_FILES][MAX_PATH_LENGTH];
-    int sizes[ARCHIVE_MAX_FILES];
+    int64_t sizes[ARCHIVE_MAX_FILES];
     void *data[ARCHIVE_MAX_FILES];
 
     int map[ARCHIVE_MAX_FILES];
