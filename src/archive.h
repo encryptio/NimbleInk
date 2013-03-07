@@ -18,6 +18,7 @@ enum archive_type {
 
 struct archive {
     int refcount;
+    bool (*load)(struct archive *self, int which, uint8_t *into);
 
     char path[MAX_PATH_LENGTH];
     enum archive_type type;
@@ -33,7 +34,6 @@ struct archive {
 };
 
 struct archive * archive_create(char *path);
-bool archive_load_single(struct archive *ar, int which, uint8_t *into);
 
 void archive_incr(void *ar);
 void archive_decr(void *ar);

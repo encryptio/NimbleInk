@@ -32,7 +32,7 @@ static void * zipper_pos_load_archive_file(struct zipper_pos *p) {
         return NULL;
     }
 
-    if ( !archive_load_single(p->ar.ar, mpos, data) ) {
+    if ( !p->ar.ar->load(p->ar.ar, mpos, data) ) {
         warnx("Couldn't load file from archive (%s, index %d, interior filename %s)", p->path, mpos, p->ar.ar->names[mpos]);
         free(data);
         return NULL;

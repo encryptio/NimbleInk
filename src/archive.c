@@ -30,25 +30,27 @@ struct archive * archive_create(char *path) {
     FILE *fh = fopen(ar->path, "rb");
     if ( fh == NULL ) {
         warn("Couldn't open %s for reading", ar->path);
-        return false;
+        return NULL;
     }
 
     uint8_t magic_buf[FILETYPE_MAGIC_BYTES];
     if ( !fread(magic_buf, FILETYPE_MAGIC_BYTES, 1, fh) ) {
         warn("Couldn't read from %s", ar->path);
-        return false;
+        return NULL;
     }
 
     fclose(fh);
 
     if ( ft_magic_matches_type(magic_buf, FT_RAR) ) {
         ar->type = archive_rar;
+        ar->load = archive_load_single_rar;
     } else if ( ft_magic_matches_type(magic_buf, FT_ZIP) ) {
         ar->type = archive_zip;
+        ar->load = archive_load_single_zip;
     } else {
         ar->type = archive_unknown;
         warnx("Couldn't determine type of archive in %s", ar->path);
-        return false;
+        return NULL;
     }
 
     if ( archive_load_toc(ar) ) {
@@ -56,17 +58,6 @@ struct archive * archive_create(char *path) {
         return ar;
     } else {
         return NULL;
-    }
-}
-
-bool archive_load_single(struct archive *ar, int which, uint8_t *into) {
-    switch ( ar->type ) {
-        case archive_zip:
-            return archive_load_single_zip(ar, which, into);
-        case archive_rar:
-            return archive_load_single_rar(ar, which, into);
-        default:
-            errx(1, "Unknown archive type %d", ar->type);
     }
 }
 
