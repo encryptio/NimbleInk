@@ -23,10 +23,12 @@ static float fit_factor(float mw, float mh, float w, float h) {
     return sf;
 }
 
-struct glview *glview_create(void) {
+struct glview * glview_create(void) {
     struct glview *gl;
-    if ( (gl = calloc(1, sizeof(struct glview))) == NULL )
-        err(1, "Couldn't allocate space for glview");
+    if ( (gl = calloc(1, sizeof(struct glview))) == NULL ) {
+        inklog(LOG_CRIT, "Couldn't allocate space for glview struct");
+        return NULL;
+    }
 
     gl->rot_anim_completeness = 1;
     gl->multidraw = true;

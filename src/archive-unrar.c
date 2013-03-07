@@ -20,8 +20,10 @@ bool archive_load_toc_rar(struct archive *ar) {
     str_append_quoted(cmd, ar->path, 1000);
 
     FILE *fh = popen(cmd, "r");
-    if ( fh == NULL )
-        err(1, "Couldn't popen command: %s", cmd);
+    if ( fh == NULL ) {
+        inklog(LOG_ERR, "Couldn't popen command: %s", cmd);
+        return false;
+    }
 
     char line[1000];
 

@@ -1,5 +1,6 @@
 #include "reference.h"
 #include "inklog.h"
+#define INKLOG_MODULE "reference"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,8 +33,16 @@ static void ref_expand_queue(int n) {
 }
 
 void ref_queue_decr(void *obj, decr_fn decr) {
-    if ( !obj )
-        errx(1, "Internal error: tried to queue a reference decrement of NULL");
+    if ( !obj ) {
+        inklog(LOG_CRIT, "Internal error: tried to queue ref decrement on NULL");
+        exit(1);
+    }
+
+    if ( !decr ) {
+        inklog(LOG_CRIT, "Internal error: tried to queue ref decrement with a NULL fn");
+        exit(1);
+    }
+
     ref_expand_queue(1);
     ref_decr_queue[ref_decr_queue_used].obj  = obj;
     ref_decr_queue[ref_decr_queue_used].decr = decr;

@@ -33,7 +33,7 @@ static void * zipper_pos_load_archive_file(struct zipper_pos *p) {
     }
 
     if ( !p->ar.ar->load(p->ar.ar, mpos, data) ) {
-        warnx("Couldn't load file from archive (%s, index %d, interior filename %s)", p->path, mpos, p->ar.ar->names[mpos]);
+        inklog(LOG_WARNING, "Couldn't load file from archive (%s, index %d, interior filename %s)", p->path, mpos, p->ar.ar->names[mpos]);
         free(data);
         return NULL;
     }
@@ -315,7 +315,7 @@ static bool zipper_set_position(struct zipper *z, char *path, bool forwards) {
     // a directory, and we should handle its contents only
     if ( z->pos[0].path[strlen(z->pos[0].path)-1] == '/' ) {
         if ( !zipper_is_dir(z->pos[0].path) ) {
-            warnx("zipper_set_position called with a path with a trailing slash (%s), but item was not a directory", z->pos[0].path);
+            inklog(LOG_WARNING, "zipper_set_position called with a path with a trailing slash (%s), but item was not a directory", z->pos[0].path);
             return false;
         }
 
@@ -353,7 +353,7 @@ struct zipper * zipper_create(char *path) {
         z->pos[0].updepth--;
 
         if ( !zipper_is_dir(z->pos[0].path) ) {
-            warnx("zipper_create called with trailing slash, but item was not a directory");
+            inklog(LOG_WARNING, "zipper_create called with trailing slash, but item was not a directory");
             return NULL;
         }
     }

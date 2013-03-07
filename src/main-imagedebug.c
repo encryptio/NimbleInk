@@ -1,7 +1,10 @@
 #include "image.h"
 #include "reference.h"
+#include "inklog.h"
+#define INKLOG_MODULE "main"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <err.h>
 #include <inttypes.h>
 
@@ -10,8 +13,12 @@ int main(int argc, char **argv) {
 
     ref_release_pool();
 
-    if ( (cpu = cpuimage_from_disk(argv[1])) == NULL )
-        errx(1, "Couldn't load image from disk");
+    if ( (cpu = cpuimage_from_disk(argv[1])) == NULL ) {
+        inklog(LOG_ERR, "Couldn't load image from disk");
+        ref_release_pool();
+        exit(1);
+    }
+
     cpu->incr(cpu);
 
     ref_release_pool();
@@ -94,5 +101,5 @@ int main(int argc, char **argv) {
     cpu->decr(cpu);
     ref_release_pool();
 
-    return 0;
+    exit(0);
 }

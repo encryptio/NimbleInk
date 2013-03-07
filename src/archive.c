@@ -1,4 +1,6 @@
 #include "archive.h"
+#include "inklog.h"
+#define INKLOG_MODULE "archive"
 
 #include "archive-unzip.h"
 #include "archive-unrar.h"
@@ -11,6 +13,7 @@
 #include <string.h>
 #include <err.h>
 #include <ctype.h>
+#include <errno.h>
 
 static bool archive_load_toc(struct archive *ar);
 static void archive_make_map(struct archive *ar);
@@ -22,8 +25,11 @@ static void archive_decr_q(struct archive *ar);
 
 struct archive * archive_create(char *path) {
     struct archive *ar;
-    if ( (ar = calloc(1, sizeof(struct archive))) == NULL )
-        err(1, "Couldn't allocate space for archive");
+    if ( (ar = calloc(1, sizeof(struct archive))) == NULL ) {
+        inklog(LOG_CRIT, "Couldn't allocate space for struct archive");
+        return NULL;
+    }
+
     ar->refcount = 1;
     ar->incr = archive_incr;
     ar->decr = archive_decr;
@@ -36,13 +42,14 @@ struct archive * archive_create(char *path) {
 
     FILE *fh = fopen(ar->path, "rb");
     if ( fh == NULL ) {
-        warn("Couldn't open %s for reading", ar->path);
+        inklog(LOG_NOTICE, "Couldn't open %s for reading: %s", ar->path, strerror(errno));
         return NULL;
     }
 
     uint8_t magic_buf[FILETYPE_MAGIC_BYTES];
     if ( !fread(magic_buf, FILETYPE_MAGIC_BYTES, 1, fh) ) {
-        warn("Couldn't read from %s", ar->path);
+        inklog(LOG_NOTICE, "Couldn't read from %s: %s", ar->path, strerror(errno));
+        fclose(fh);
         return NULL;
     }
 
@@ -56,7 +63,7 @@ struct archive * archive_create(char *path) {
         ar->load = archive_load_single_zip;
     } else {
         ar->type = archive_unknown;
-        warnx("Couldn't determine type of archive in %s", ar->path);
+        inklog(LOG_WARNING, "Couldn't determine type of archive in %s", ar->path);
         return NULL;
     }
 
@@ -83,13 +90,13 @@ static bool archive_load_toc(struct archive *ar) {
 
 bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which, uint8_t *into) {
     if ( !fread(into, ar->sizes[which], 1, fh) ) {
-        warn("Couldn't read file from archive pipe");
+        inklog(LOG_WARNING, "Couldn't read file %s:%d from archive pipe: %s", ar->path, which, strerror(errno));
         return false;
     }
 
     char extra;
     if ( fread(&extra, 1, 1, fh) ) {
-        warnx("Too much data in archive pipe");
+        inklog(LOG_WARNING, "Too much data in archive pipe for file %s:%d", ar->path, which);
         return false;
     }
 
@@ -99,7 +106,7 @@ bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which
 bool archive_load_single_from_command(struct archive *ar, char *cmd, int which, uint8_t *into) {
     FILE *fh = popen(cmd, "r");
     if ( fh == NULL ) {
-        warn("Couldn't popen command: %s", cmd);
+        inklog(LOG_WARNING, "Couldn't popen command %s: %s", cmd, strerror(errno));
         return false;
     }
 
@@ -150,4 +157,3 @@ static void archive_decr(struct archive *ar) {
 static void archive_decr_q(struct archive *ar) {
     ref_queue_decr((void*) ar, (decr_fn) ar->decr);
 }
-

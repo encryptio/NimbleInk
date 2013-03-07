@@ -1,6 +1,8 @@
 #if ENABLE_LIBJPEG
 
 #include "image-libjpeg.h"
+#include "inklog.h"
+#define INKLOG_MODULE "image-libjpeg"
 
 #include <string.h>
 #include <assert.h>
@@ -89,8 +91,10 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
             errx(1, "not reached");
     }
 
-    if ( (scanlines = malloc(sizeof(JSAMPLE) * cinfo.output_width * cinfo.output_components * IMAGE_LIBJPEG_SCANLINES_PER_LOOP)) == NULL )
-        err(1, "Couldn't allocate space for scanlines");
+    if ( (scanlines = malloc(sizeof(JSAMPLE) * cinfo.output_width * cinfo.output_components * IMAGE_LIBJPEG_SCANLINES_PER_LOOP)) == NULL ) {
+        inklog(LOG_CRIT, "Couldn't allocate space for scanlines");
+        goto DESTROY;
+    }
 
     JSAMPROW input[IMAGE_LIBJPEG_SCANLINES_PER_LOOP];
     for (int i = 0; i < IMAGE_LIBJPEG_SCANLINES_PER_LOOP; i++)
@@ -150,7 +154,8 @@ bool cpuimage_load_from_ram_libjpeg(void *ptr, int len, struct cpuimage *i) {
     ret = true;
 
 DESTROY:
-    free(scanlines);
+    if ( scanlines != NULL )
+        free(scanlines);
     jpeg_destroy_decompress(&cinfo);
 
     return ret;

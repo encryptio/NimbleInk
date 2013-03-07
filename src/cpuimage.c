@@ -1,4 +1,6 @@
 #include "image.h"
+#include "inklog.h"
+#define INKLOG_MODULE "cpuimage"
 
 #include "image-libjpeg.h"
 #include "image-giflib.h"
@@ -15,6 +17,7 @@
 #include <string.h>
 #include <err.h>
 #include <inttypes.h>
+#include <errno.h>
 
 static void cpuimage_incr(struct cpuimage *i);
 static void cpuimage_decr(struct cpuimage *i);
@@ -29,8 +32,11 @@ struct cpuimage * cpuimage_from_disk(char *path) {
     int alloced = 8192;
     int used = 0;
 
-    if ( (buf = malloc(alloced)) == NULL )
-        err(1, "Couldn't allocate space for image load from disk");
+    if ( (buf = malloc(alloced)) == NULL ) {
+        inklog(LOG_WARNING, "Couldn't allocate space for image load from disk: %s", strerror(errno));
+        fclose(fh);
+        return NULL;
+    }
 
     size_t did_read;
     while ( (did_read = fread(buf+used, 1, alloced-used, fh)) > 0 ) {
@@ -39,14 +45,18 @@ struct cpuimage * cpuimage_from_disk(char *path) {
             alloced *= 2;
 
             if ( alloced > IMAGE_MAX_FILESIZE ) {
-                warnx("Image in %s is too big to be loaded (max size %d bytes)", path, IMAGE_MAX_FILESIZE);
+                inklog(LOG_NOTICE, "Image in %s is too big to be loaded (max size %d bytes)", path, IMAGE_MAX_FILESIZE);
                 fclose(fh);
                 free(buf);
-                return false;
+                return NULL;
             }
 
-            if ( (buf = realloc(buf, alloced)) == NULL )
-                err(1, "Couldn't realloc space for image load from disk");
+            if ( (buf = realloc(buf, alloced)) == NULL ) {
+                inklog(LOG_NOTICE, "Couldn't realloc space for image load from disk (%s)", path);
+                fclose(fh);
+                free(buf);
+                return NULL;
+            }
         }
     }
 
@@ -63,8 +73,11 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
     double start = current_timestamp();
 
     struct cpuimage *i;
-    if ( (i = calloc(1, sizeof(struct cpuimage))) == NULL )
-        err(1, "Couldn't allocate space for cpuimage");
+    if ( (i = calloc(1, sizeof(struct cpuimage))) == NULL ) {
+        inklog(LOG_CRIT, "Couldn't allocate space for cpuimage struct");
+        return NULL;
+    }
+
     i->refcount = 1;
     i->incr = cpuimage_incr;
     i->decr = cpuimage_decr;
@@ -129,12 +142,14 @@ bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h, enum cpuimage_pixel
     int channels = cpuimage_channel_count_for_pixel_format(pf);
 
     if ( i->s_w * i->s_h > IMAGE_MAX_SLICES ) {
-        warnx("Too many slices. wanted %d (=%dx%d) slices for image of size %dx%d but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, w, h, IMAGE_MAX_SLICES);
+        inklog(LOG_WARNING, "Too many slices. Wanted %d (=%dx%d) slices for image of size %dx%d but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, w, h, IMAGE_MAX_SLICES);
         return false;
     }
 
-    if ( (i->slices = malloc(channels * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL )
-        err(1, "Couldn't allocate space for image");
+    if ( (i->slices = malloc(channels * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h)) == NULL ) {
+        inklog(LOG_WARNING, "Couldn't allocate %llu bytes for cpuimage slices", (long long unsigned) channels * IMAGE_SLICE_SIZE * IMAGE_SLICE_SIZE * i->s_w * i->s_h);
+        return false;
+    }
 
 #if DEBUG_RANDOMIZE_SLICES
     for (int j = 0; j < channels*IMAGE_SLICE_SIZE*IMAGE_SLICE_SIZE*i->s_w*i->s_h; j++)

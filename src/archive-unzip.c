@@ -1,4 +1,6 @@
 #include "archive-unzip.h"
+#include "inklog.h"
+#define INKLOG_MODULE "archive-unzip"
 
 #include "stringutils.h"
 
@@ -7,9 +9,10 @@
 #include <string.h>
 #include <err.h>
 #include <ctype.h>
+#include <errno.h>
 
 #define EXPECT(condition) if ( !(condition) ) { \
-            warnx("Condition failed in readline: %s", #condition); \
+            inklog(LOG_ERR, "Condition failed in readline: %s", #condition); \
             continue; \
         }
 
@@ -18,9 +21,13 @@ bool archive_load_toc_zip(struct archive *ar) {
     strcpy(cmd, "unzip -l -qq ");
     str_append_quoted_as_unzip_file_literal(cmd, ar->path, 1000);
 
+    ar->files = 0;
+
     FILE *fh = popen(cmd, "r");
-    if ( fh == NULL )
-        err(1, "Couldn't popen command: %s", cmd);
+    if ( fh == NULL ) {
+        inklog(LOG_ERR, "Couldn't popen command %s: %s", cmd, strerror(errno));
+        return false;
+    }
 
     char line[1000];
     while ( fgets(line, 1000, fh) ) {

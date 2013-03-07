@@ -1,4 +1,6 @@
 #include "image.h"
+#include "inklog.h"
+#define INKLOG_MODULE "glimage"
 
 #include "archive.h"
 #include "filetype.h"
@@ -18,8 +20,11 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
     double start = current_timestamp();
 
     struct glimage *gl;
-    if ( (gl = calloc(1, sizeof(struct glimage))) == NULL )
-        err(1, "Couldn't allocate space for glimage");
+    if ( (gl = calloc(1, sizeof(struct glimage))) == NULL ) {
+        inklog(LOG_CRIT, "Couldn't allocate space for glimage struct");
+        return NULL;
+    }
+
     gl->refcount = 1;
     glimage_decr_q(gl);
 
