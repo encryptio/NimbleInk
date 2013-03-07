@@ -121,7 +121,7 @@ bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h, enum cpuimage_pixel
     int channels = cpuimage_channel_count_for_pixel_format(pf);
 
     if ( i->s_w * i->s_h > IMAGE_MAX_SLICES ) {
-        warnx("Too many slices. wanted %d (=%dx%d) slices but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, IMAGE_MAX_SLICES);
+        warnx("Too many slices. wanted %d (=%dx%d) slices for image of size %dx%d but only have structure room for %d", i->s_w*i->s_h, i->s_w, i->s_h, w, h, IMAGE_MAX_SLICES);
         return false;
     }
 
