@@ -20,6 +20,9 @@ enum cpuimage_pixel_format {
 
 struct cpuimage {
     int refcount;
+    void (*incr)(struct cpuimage *i);
+    void (*decr)(struct cpuimage *i);
+    void (*decr_q)(struct cpuimage *i);
 
     uint16_t w;
     uint16_t h;
@@ -40,12 +43,5 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len);
 
 // internal to the image_* functions
 bool cpuimage_setup_cpu_wh(struct cpuimage *i, int w, int h, enum cpuimage_pixel_format pf); // sets w,h and allocates slices
-
-void cpuimage_incr(void *i);
-void cpuimage_decr(void *i);
-
-static inline void cpuimage_decr_q(struct cpuimage *i) {
-    ref_queue_decr((void*)(i), cpuimage_decr);
-}
 
 #endif

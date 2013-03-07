@@ -16,6 +16,10 @@
 #include <err.h>
 #include <inttypes.h>
 
+static void cpuimage_incr(struct cpuimage *i);
+static void cpuimage_decr(struct cpuimage *i);
+static void cpuimage_decr_q(struct cpuimage *i);
+
 struct cpuimage * cpuimage_from_disk(char *path) {
     FILE *fh = fopen(path, "rb");
     if ( !fh )
@@ -62,7 +66,11 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
     if ( (i = calloc(1, sizeof(struct cpuimage))) == NULL )
         err(1, "Couldn't allocate space for cpuimage");
     i->refcount = 1;
-    cpuimage_decr_q(i);
+    i->incr = cpuimage_incr;
+    i->decr = cpuimage_decr;
+    i->decr_q = cpuimage_decr_q;
+
+    i->decr_q(i);
 
     bool ret = false;
 
@@ -142,11 +150,15 @@ static void cpuimage_free(struct cpuimage *i) {
     free(i);
 }
 
-void cpuimage_incr(void *i) {
-    ((struct cpuimage *)i)->refcount++;
+static void cpuimage_incr(struct cpuimage *i) {
+    i->refcount++;
 }
 
-void cpuimage_decr(void *i) {
-    if ( !( --((struct cpuimage *) i)->refcount ) )
-        cpuimage_free((struct cpuimage *) i);
+static void cpuimage_decr(struct cpuimage *i) {
+    if ( !( --i->refcount ) )
+        cpuimage_free(i);
+}
+
+static void cpuimage_decr_q(struct cpuimage *i) {
+    ref_queue_decr((void*) i, (decr_fn) i->decr);
 }

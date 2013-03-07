@@ -56,14 +56,14 @@ static bool zipper_pos_load_cpuimage(struct zipper_pos *p) {
         free(data);
         if ( !p->cpu )
             return false;
-        cpuimage_incr(p->cpu);
+        p->cpu->incr(p->cpu);
 
         return true;
     } else {
         p->cpu = cpuimage_from_disk(p->path);
         if ( !p->cpu )
             return false;
-        cpuimage_incr(p->cpu);
+        p->cpu->incr(p->cpu);
 
         return true;
     }
@@ -86,7 +86,7 @@ static bool zipper_pos_load_glimage(struct zipper_pos *p) {
 
 static void zipper_pos_free(struct zipper_pos *p) {
     if ( p->cpu ) {
-        cpuimage_decr(p->cpu);
+        p->cpu->decr(p->cpu);
         p->cpu = NULL;
     }
     if ( p->gl ) {
@@ -278,7 +278,7 @@ static bool zipper_pos_seek(struct zipper_pos *p, bool forwards) {
     // seek succeeded, clean up any hanging references
 
     if ( p->cpu ) {
-        cpuimage_decr(p->cpu);
+        p->cpu->decr(p->cpu);
         p->cpu = NULL;
         new.cpu = NULL;
     }

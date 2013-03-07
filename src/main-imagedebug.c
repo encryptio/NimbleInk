@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
     if ( (cpu = cpuimage_from_disk(argv[1])) == NULL )
         errx(1, "Couldn't load image from disk");
-    cpuimage_incr(cpu);
+    cpu->incr(cpu);
 
     ref_release_pool();
 
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
             fclose(fh);
         }
 
-    cpuimage_decr_q(cpu);
+    cpu->decr(cpu);
     ref_release_pool();
 
     return 0;
