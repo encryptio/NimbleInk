@@ -19,6 +19,9 @@ enum archive_type {
 struct archive {
     int refcount;
     bool (*load)(struct archive *self, int which, uint8_t *into);
+    void (*incr)(struct archive *self);
+    void (*decr)(struct archive *self);
+    void (*decr_q)(struct archive *self);
 
     char path[MAX_PATH_LENGTH];
     enum archive_type type;
@@ -26,7 +29,6 @@ struct archive {
     // TODO: make dynamic
     char names[ARCHIVE_MAX_FILES][MAX_PATH_LENGTH];
     int64_t sizes[ARCHIVE_MAX_FILES];
-
     int map[ARCHIVE_MAX_FILES];
 
     int files;
@@ -34,13 +36,6 @@ struct archive {
 };
 
 struct archive * archive_create(char *path);
-
-void archive_incr(void *ar);
-void archive_decr(void *ar);
-
-static inline void archive_decr_q(struct archive *ar) {
-    ref_queue_decr((void*)(ar), archive_decr);
-}
 
 // Private
 bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which, uint8_t *into);

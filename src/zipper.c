@@ -94,7 +94,7 @@ static void zipper_pos_free(struct zipper_pos *p) {
         p->gl = NULL;
     }
     if ( p->ar.ar ) {
-        archive_decr(p->ar.ar);
+        p->ar.ar->decr(p->ar.ar);
         p->ar.ar = NULL;
     }
 }
@@ -178,7 +178,7 @@ static bool zipper_pos_prepare_if_archive(struct zipper_pos *p, bool forwards) {
     p->ar.ar = archive_create(p->path);
     if ( !p->ar.ar )
         return false;
-    archive_incr(p->ar.ar);
+    p->ar.ar->incr(p->ar.ar);
 
     p->ar.is = true;
     p->ar.pos = forwards ? 0 : p->ar.ar->files-1;
@@ -294,7 +294,7 @@ static bool zipper_pos_seek(struct zipper_pos *p, bool forwards) {
             new.ar.ar = NULL;
         }
         if ( p->ar.ar )
-            archive_decr_q(p->ar.ar);
+            p->ar.ar->decr(p->ar.ar);
     }
 
     memcpy(p, &new, sizeof(struct zipper_pos));
@@ -414,7 +414,7 @@ static bool zipper_add_seek_pos(struct zipper *z, bool forwards) {
     new.cpu = NULL;
     new.gl = NULL;
     if ( new.ar.is )
-        archive_incr(new.ar.ar); // duplicated the pointer, and zipper_pos_seek assumes the refcounts are correct
+        new.ar.ar->incr(new.ar.ar); // duplicated the pointer, and zipper_pos_seek assumes the refcounts are correct
 
     if ( zipper_pos_seek(&new, forwards) ) {
         zipper_make_pos_space(z, forwards);
@@ -422,7 +422,7 @@ static bool zipper_add_seek_pos(struct zipper *z, bool forwards) {
         return true;
     } else {
         if ( new.ar.is )
-            archive_decr(new.ar.ar);
+            new.ar.ar->decr(new.ar.ar);
         return false;
     }
 }

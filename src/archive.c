@@ -14,6 +14,9 @@
 
 static bool archive_load_toc(struct archive *ar);
 static void archive_make_map(struct archive *ar);
+static void archive_incr(struct archive *ar);
+static void archive_decr(struct archive *ar);
+static void archive_decr_q(struct archive *ar);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -22,7 +25,11 @@ struct archive * archive_create(char *path) {
     if ( (ar = calloc(1, sizeof(struct archive))) == NULL )
         err(1, "Couldn't allocate space for archive");
     ar->refcount = 1;
-    archive_decr_q(ar);
+    ar->incr = archive_incr;
+    ar->decr = archive_decr;
+    ar->decr_q = archive_decr_q;
+
+    ar->decr_q(ar);
 
     strncpy(ar->path, path, MAX_PATH_LENGTH);
     ar->path[MAX_PATH_LENGTH-1] = '\0';
@@ -131,11 +138,16 @@ static void archive_free(struct archive *ar) {
     free(ar);
 }
 
-void archive_incr(void *ar) {
-    ((struct archive *)ar)->refcount++;
+static void archive_incr(struct archive *ar) {
+    ar->refcount++;
 }
 
-void archive_decr(void *ar) {
-    if ( !( --((struct archive *) ar)->refcount ) )
-        archive_free((struct archive *) ar);
+static void archive_decr(struct archive *ar) {
+    if ( !( --ar->refcount ) )
+        archive_free(ar);
 }
+
+static void archive_decr_q(struct archive *ar) {
+    ref_queue_decr((void*) ar, (decr_fn) ar->decr);
+}
+
