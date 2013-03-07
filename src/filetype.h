@@ -4,24 +4,25 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+enum ft_type {
+    FT_RAR,
+    FT_ZIP,
+    FT_JPEG,
+    FT_PNG,
+    FT_GIF,
+    FT_TIFF,
+    FT_PNM,
+    FT_BMP,
+
+    FT_ARCHIVE,
+    FT_IMAGE
+};
+
 #define FILETYPE_MAGIC_BYTES 8
 
-// these functions assume there is at least FILETYPE_MAGIC_BYTES accessible
-bool ft_is_rar(uint8_t *data);
-bool ft_is_zip(uint8_t *data);
-bool ft_is_jpg(uint8_t *data);
-bool ft_is_png(uint8_t *data);
-bool ft_is_gif(uint8_t *data);
-bool ft_is_tif(uint8_t *data);
-bool ft_is_pnm(uint8_t *data);
-bool ft_is_bmp(uint8_t *data);
+// data must have at least FILETYPE_MAGIC_BYTES accessible
+bool ft_magic_matches_type(uint8_t *data, enum ft_type type);
 
-// meta-types
-bool ft_is_archive(uint8_t *data);
-bool ft_is_image(uint8_t *data);
-
-// meta-helpers
-bool ft_file_is_archive(char *path);
-bool ft_file_is_image(char *path);
+bool ft_path_matches_type(char *path, enum ft_type type);
 
 #endif

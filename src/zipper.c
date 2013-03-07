@@ -140,7 +140,7 @@ static void zipper_pos_downifdir(struct zipper_pos *p, bool forwards) {
 }
 
 static bool zipper_pos_file_is_usable(struct zipper_pos *p) {
-    if ( ft_file_is_image(p->path) || ft_file_is_archive(p->path) )
+    if ( ft_path_matches_type(p->path, FT_IMAGE) || ft_path_matches_type(p->path, FT_ARCHIVE) )
         return true;
 
     return false;
@@ -157,14 +157,14 @@ static bool zipper_pos_archive_file_is_usable(struct zipper_pos *p) {
 
     int len = p->ar.ar->sizes[mpos];
 
-    if ( len < 8 )
+    if ( len < FILETYPE_MAGIC_BYTES )
         return false;
 
-    return ft_is_image(data);
+    return ft_magic_matches_type(data, FT_ARCHIVE);
 }
 
 static bool zipper_pos_prepare_if_archive(struct zipper_pos *p, bool forwards) {
-    if ( !ft_file_is_archive(p->path) )
+    if ( !ft_path_matches_type(p->path, FT_ARCHIVE) )
         return true;
 
     p->ar.ar = archive_create(p->path);

@@ -68,19 +68,19 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
     bool ret = false;
 
 #if ENABLE_LIBJPEG
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_jpg((uint8_t*) ptr) )
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_magic_matches_type((uint8_t*) ptr, FT_JPEG) )
         ret = cpuimage_load_from_ram_libjpeg(ptr, len, i);
 #endif
 #if ENABLE_GIFLIB
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_gif((uint8_t*) ptr) )
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_magic_matches_type((uint8_t*) ptr, FT_GIF) )
         ret = cpuimage_load_from_ram_giflib(ptr, len, i);
 #endif
 #if ENABLE_PNM
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_pnm((uint8_t*) ptr) )
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_magic_matches_type((uint8_t*) ptr, FT_PNM) )
         ret = cpuimage_load_from_ram_pnm(ptr, len, i);
 #endif
 #if ENABLE_LIBPNG
-    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_is_png((uint8_t*) ptr) )
+    if ( !ret && len >= FILETYPE_MAGIC_BYTES && ft_magic_matches_type((uint8_t*) ptr, FT_PNG) )
         ret = cpuimage_load_from_ram_libpng(ptr, len, i);
 #endif
 #if ENABLE_SDL_IMAGE

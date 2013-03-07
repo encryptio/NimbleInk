@@ -41,9 +41,9 @@ struct archive * archive_create(char *path) {
 
     fclose(fh);
 
-    if ( ft_is_rar(magic_buf) ) {
+    if ( ft_magic_matches_type(magic_buf, FT_RAR) ) {
         ar->type = archive_rar;
-    } else if ( ft_is_zip(magic_buf) ) {
+    } else if ( ft_magic_matches_type(magic_buf, FT_ZIP) ) {
         ar->type = archive_zip;
     } else {
         ar->type = archive_unknown;
