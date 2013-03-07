@@ -4,7 +4,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 
 bool ft_magic_matches_type(uint8_t *data, enum ft_type type) {
@@ -50,7 +49,9 @@ bool ft_magic_matches_type(uint8_t *data, enum ft_type type) {
             return data[0] == 'P' &&
                    data[1] >= '4' &&
                    data[1] <= '6' &&
-                   isspace(data[2]);
+                   (data[2] == ' ' || data[2] == '\t'
+                    || data[2] == '\n' || data[2] == '\v'
+                    || data[2] == '\f' || data[2] == '\r');
         case FT_BMP:
             return data[0] == 'B' &&
                    data[1] == 'M';
