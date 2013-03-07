@@ -223,4 +223,3 @@ void archive_decr(void *ar) {
     if ( !( --((struct archive *) ar)->refcount ) )
         archive_free((struct archive *) ar);
 }
-

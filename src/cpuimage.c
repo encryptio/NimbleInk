@@ -150,4 +150,3 @@ void cpuimage_decr(void *i) {
     if ( !( --((struct cpuimage *) i)->refcount ) )
         cpuimage_free((struct cpuimage *) i);
 }
-

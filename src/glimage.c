@@ -208,4 +208,3 @@ void glimage_decr(void *gl) {
     if ( !( --((struct glimage *) gl)->refcount ) )
         glimage_free((struct glimage *) gl);
 }
-

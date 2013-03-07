@@ -8,4 +8,3 @@ bool archive_load_all_zip(struct archive *ar);
 bool archive_load_single_zip(struct archive *ar, int which);
 
 #endif
-

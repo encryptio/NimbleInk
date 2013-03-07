@@ -301,4 +301,3 @@ void loop_window_decr(void *win) {
 }
 
 #endif /* LOOP_SDL */
-

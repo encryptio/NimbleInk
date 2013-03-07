@@ -97,4 +97,3 @@ bool archive_load_single_zip(struct archive *ar, int which) {
     str_append_quoted_as_unzip_interior_literal(cmd, ar->names[which], 1000);
     return archive_load_single_from_command(ar, cmd, which);
 }
-

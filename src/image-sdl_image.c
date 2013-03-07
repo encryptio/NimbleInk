@@ -89,4 +89,3 @@ static bool cpuimage_load_from_surface(SDL_Surface *surface, struct cpuimage *i)
 }
 
 #endif /* ENABLE_SDL_IMAGE */
-

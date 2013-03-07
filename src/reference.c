@@ -79,4 +79,3 @@ void ref_release_pool(void) {
         inklog(LOG_DEBUG, "finished releasing, actually released %d objects", released);
 #endif
 }
-

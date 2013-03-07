@@ -248,4 +248,3 @@ bool cpuimage_load_from_ram_pnm(void *orig, int len, struct cpuimage *i) {
 }
 
 #endif
-

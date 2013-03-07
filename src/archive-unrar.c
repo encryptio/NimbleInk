@@ -106,4 +106,3 @@ bool archive_load_single_rar(struct archive *ar, int which) {
     str_append_quoted(cmd, ar->names[which], 1000);
     return archive_load_single_from_command(ar, cmd, which);
 }
-

@@ -487,4 +487,3 @@ void zipper_decr(void *z) {
     if ( !( --((struct zipper *) z)->refcount ) )
         zipper_free((struct zipper *) z);
 }
-

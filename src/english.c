@@ -45,6 +45,4 @@ int english_compare_natural(char *a, char *b) {
 
     // end of both, same string
     return 0;
-        
 }
-

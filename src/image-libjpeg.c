@@ -157,4 +157,3 @@ DESTROY:
 }
 
 #endif /* ENABLE_LIBJPEG */
-

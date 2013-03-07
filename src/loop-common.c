@@ -93,4 +93,3 @@ uint32_t loop_keycode(const char *name) {
         return 0;
     return res->ch;
 }
-

@@ -137,4 +137,3 @@ void glview_set_rotate(struct glview *gl, int direction) {
     gl->rot_anim_completeness = 0;
     gl->rot_anim_to += direction;
 }
-

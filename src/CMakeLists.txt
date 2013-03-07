@@ -78,4 +78,3 @@ link_libraries(m)
 add_executable(nink ${SOURCES} main.c)
 add_executable(nink-imagedebug ${SOURCES} main-imagedebug.c)
 add_executable(nink-sorttest english.c main-sorttest.c)
-
