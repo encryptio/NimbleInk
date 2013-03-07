@@ -81,7 +81,6 @@ bool archive_load_toc_rar(struct archive *ar) {
         for (i = 0; i < strlen(filename)+1; i++)
             ar->names[ar->files][i] = filename[i];
         ar->sizes[ar->files] = size;
-        ar->data[ar->files] = NULL;
 
         ar->files++;
     }
@@ -91,18 +90,11 @@ bool archive_load_toc_rar(struct archive *ar) {
 
 #undef EXPECT
 
-bool archive_load_all_rar(struct archive *ar) {
-    char cmd[1000];
-    strcpy(cmd, "unrar p -kb -p- -cfg- -c- -idcpq ");
-    str_append_quoted(cmd, ar->path, 1000);
-    return archive_load_all_from_command(ar, cmd);
-}
-
-bool archive_load_single_rar(struct archive *ar, int which) {
+bool archive_load_single_rar(struct archive *ar, int which, uint8_t *into) {
     char cmd[1000];
     strcpy(cmd, "unrar p -kb -p- -cfg- -c- -idcpq ");
     str_append_quoted(cmd, ar->path, 1000);
     str_append(cmd, " ", 1000);
     str_append_quoted(cmd, ar->names[which], 1000);
-    return archive_load_single_from_command(ar, cmd, which);
+    return archive_load_single_from_command(ar, cmd, which, into);
 }

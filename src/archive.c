@@ -59,23 +59,12 @@ struct archive * archive_create(char *path) {
     }
 }
 
-bool archive_load_single(struct archive *ar, int which) {
+bool archive_load_single(struct archive *ar, int which, uint8_t *into) {
     switch ( ar->type ) {
         case archive_zip:
-            return archive_load_single_zip(ar, which);
+            return archive_load_single_zip(ar, which, into);
         case archive_rar:
-            return archive_load_single_rar(ar, which);
-        default:
-            errx(1, "Unknown archive type %d", ar->type);
-    }
-}
-
-bool archive_load_all(struct archive *ar) {
-    switch ( ar->type ) {
-        case archive_zip:
-            return archive_load_all_zip(ar);
-        case archive_rar:
-            return archive_load_all_rar(ar);
+            return archive_load_single_rar(ar, which, into);
         default:
             errx(1, "Unknown archive type %d", ar->type);
     }
@@ -94,69 +83,12 @@ static bool archive_load_toc(struct archive *ar) {
 
 //////////////////////////////////////////////////////////////////////
 
-bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh) {
-    for (int i = 0; i < ar->files; i++) {
-        void *new_data;
-        if ( (new_data = malloc(ar->sizes[i])) == NULL )
-            err(1, "Couldn't malloc space for file");
-
-        if ( !fread(new_data, ar->sizes[i], 1, fh) ) {
-            warn("Couldn't read file from archive pipe");
-            return false;
-        }
-
-        // XXX memory fence, lock
-
-        if ( ar->data[i] ) {
-            free(ar->data[i]);
-        } else {
-            ar->files_loaded++;
-        }
-        ar->data[i] = new_data;
-    }
-
-    char extra;
-    if ( fread(&extra, 1, 1, fh) ) {
-        warnx("Too much data in archive pipe");
-        return false;
-    }
-
-    return true;
-}
-
-bool archive_load_all_from_command(struct archive *ar, char *cmd) {
-    FILE *fh = popen(cmd, "r");
-    if ( fh == NULL ) {
-        warn("Couldn't popen command: %s", cmd);
-        return false;
-    }
-
-    bool ret = archive_load_all_from_filehandle(ar, fh);
-
-    pclose(fh);
-
-    return ret;
-}
-
-bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which) {
-    void *new_data;
-    if ( (new_data = malloc(ar->sizes[which])) == NULL )
-        err(1, "Couldn't malloc space for file");
-
-    if ( !fread(new_data, ar->sizes[which], 1, fh) ) {
+bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which, uint8_t *into) {
+    if ( !fread(into, ar->sizes[which], 1, fh) ) {
         warn("Couldn't read file from archive pipe");
         return false;
     }
 
-    // XXX memory fence, lock
-
-    if ( ar->data[which] ) {
-        free(ar->data[which]);
-    } else {
-        ar->files_loaded++;
-    }
-    ar->data[which] = new_data;
-
     char extra;
     if ( fread(&extra, 1, 1, fh) ) {
         warnx("Too much data in archive pipe");
@@ -166,14 +98,14 @@ bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which
     return true;
 }
 
-bool archive_load_single_from_command(struct archive *ar, char *cmd, int which) {
+bool archive_load_single_from_command(struct archive *ar, char *cmd, int which, uint8_t *into) {
     FILE *fh = popen(cmd, "r");
     if ( fh == NULL ) {
         warn("Couldn't popen command: %s", cmd);
         return false;
     }
 
-    bool ret = archive_load_single_from_filehandle(ar, fh, which);
+    bool ret = archive_load_single_from_filehandle(ar, fh, which, into);
 
     pclose(fh);
 
@@ -205,13 +137,6 @@ static void archive_make_map(struct archive *ar) {
 //////////////////////////////////////////////////////////////////////
 
 static void archive_free(struct archive *ar) {
-    for (int i = 0; i < ar->files; i++)
-        if ( ar->data[i] ) {
-            ar->files_loaded--;
-            free(ar->data[i]);
-            ar->data[i] = NULL;
-        }
-
     free(ar);
 }
 

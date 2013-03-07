@@ -25,15 +25,17 @@ static bool zipper_is_dir(char *path) {
 
 static void * zipper_pos_load_archive_file(struct zipper_pos *p) {
     int mpos = p->ar.ar->map[p->ar.pos];
-    void *data = p->ar.ar->data[mpos];
-    if ( !data ) {
-        if ( !archive_load_single(p->ar.ar, mpos) ) {
-            warnx("Couldn't load file from archive (%s, index %d, interior filename %s)", p->path, mpos, p->ar.ar->names[mpos]);
-            return NULL;
-        }
 
-        data = p->ar.ar->data[mpos];
-        assert(data);
+    uint8_t *data = malloc(p->ar.ar->sizes[mpos]);
+    if ( data == NULL ) {
+        inklog(LOG_ERR, "Couldn't malloc space for data file (%llu bytes)", (long long unsigned) p->ar.ar->sizes[mpos]);
+        return NULL;
+    }
+
+    if ( !archive_load_single(p->ar.ar, mpos, data) ) {
+        warnx("Couldn't load file from archive (%s, index %d, interior filename %s)", p->path, mpos, p->ar.ar->names[mpos]);
+        free(data);
+        return NULL;
     }
 
     return data;
@@ -51,6 +53,7 @@ static bool zipper_pos_load_cpuimage(struct zipper_pos *p) {
             return false;
 
         p->cpu = cpuimage_from_ram(data, p->ar.ar->sizes[mpos]);
+        free(data);
         if ( !p->cpu )
             return false;
         cpuimage_incr(p->cpu);
@@ -157,10 +160,15 @@ static bool zipper_pos_archive_file_is_usable(struct zipper_pos *p) {
 
     int len = p->ar.ar->sizes[mpos];
 
-    if ( len < FILETYPE_MAGIC_BYTES )
+    if ( len < FILETYPE_MAGIC_BYTES ) {
+        free(data);
         return false;
+    }
 
-    return ft_magic_matches_type(data, FT_ARCHIVE);
+    bool ret = ft_magic_matches_type(data, FT_IMAGE);
+    free(data);
+
+    return ret;
 }
 
 static bool zipper_pos_prepare_if_archive(struct zipper_pos *p, bool forwards) {

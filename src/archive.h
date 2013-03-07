@@ -25,7 +25,6 @@ struct archive {
     // TODO: make dynamic
     char names[ARCHIVE_MAX_FILES][MAX_PATH_LENGTH];
     int64_t sizes[ARCHIVE_MAX_FILES];
-    void *data[ARCHIVE_MAX_FILES];
 
     int map[ARCHIVE_MAX_FILES];
 
@@ -34,8 +33,7 @@ struct archive {
 };
 
 struct archive * archive_create(char *path);
-bool archive_load_single(struct archive *ar, int which);
-bool archive_load_all(struct archive *ar);
+bool archive_load_single(struct archive *ar, int which, uint8_t *into);
 
 void archive_incr(void *ar);
 void archive_decr(void *ar);
@@ -45,9 +43,7 @@ static inline void archive_decr_q(struct archive *ar) {
 }
 
 // Private
-bool archive_load_all_from_filehandle(struct archive *ar, FILE *fh);
-bool archive_load_all_from_command(struct archive *ar, char *cmd);
-bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which);
-bool archive_load_single_from_command(struct archive *ar, char *cmd, int which);
+bool archive_load_single_from_filehandle(struct archive *ar, FILE *fh, int which, uint8_t *into);
+bool archive_load_single_from_command(struct archive *ar, char *cmd, int which, uint8_t *into);
 
 #endif
