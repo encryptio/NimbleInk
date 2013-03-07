@@ -1,4 +1,5 @@
 #include "glview.h"
+#include "timing.h"
 #include "inklog.h"
 #define INKLOG_MODULE "glview"
 
@@ -68,11 +69,10 @@ static void glview_image_size_rotation(struct glview *gl, float iw, float ih, fl
 }
 
 void glview_draw(struct glview *gl) {
+    double start_time = current_timestamp();
+
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-
-    inklog(LOG_DEBUG, "drawing frame %ld into %dx%d+%d,%d", gl->frameidx, viewport[2], viewport[3], viewport[0], viewport[1]);
-    gl->frameidx++;
 
     gl->w = viewport[2];
     gl->h = viewport[3];
@@ -103,6 +103,11 @@ void glview_draw(struct glview *gl) {
         // TODO: draw a "no image" image
         inklog(LOG_NOTICE, "no zipper to draw");
     }
+
+    double draw_time = current_timestamp() - start_time;
+
+    inklog(LOG_DEBUG, "frame %ld into %dx%d+%d,%d in %.2fms", gl->frameidx, viewport[2], viewport[3], viewport[0], viewport[1], draw_time*1000);
+    gl->frameidx++;
 }
 
 bool glview_animating(struct glview *gl) {
