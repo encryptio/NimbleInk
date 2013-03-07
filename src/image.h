@@ -4,7 +4,7 @@
 #define IMAGE_SLICE_SIZE 512
 // TODO: add thumbnail slices
 
-#define IMAGE_MAX_SLICES 256
+#define IMAGE_MAX_SLICES 128
 
 // 32MiB
 #define IMAGE_MAX_FILESIZE 1024*1024*32
