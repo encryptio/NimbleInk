@@ -19,8 +19,8 @@ struct glimage {
     uint16_t s_h; // slices tall
     GLuint slices[IMAGE_MAX_SLICES];
 
-    uint32_t cpu_time; // ms
-    uint32_t gl_time;
+    double cpu_time;
+    double gl_time;
 
     char path[MAX_PATH_LENGTH];
 };

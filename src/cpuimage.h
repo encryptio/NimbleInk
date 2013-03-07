@@ -30,7 +30,7 @@ struct cpuimage {
 
     enum cpuimage_pixel_format pf;
 
-    uint32_t cpu_time; // ms
+    double cpu_time;
 
     char path[MAX_PATH_LENGTH];
 };

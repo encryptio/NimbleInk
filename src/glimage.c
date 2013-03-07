@@ -2,8 +2,8 @@
 
 #include "archive.h"
 #include "filetype.h"
+#include "timing.h"
 
-#include <SDL.h>
 #include <SDL_opengl.h>
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
 bool image_multidraw = true;
 
 struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
-    uint32_t start = SDL_GetTicks();
+    double start = current_timestamp();
 
     struct glimage *gl;
     if ( (gl = calloc(1, sizeof(struct glimage))) == NULL )
@@ -98,7 +98,7 @@ struct glimage * glimage_from_cpuimage(struct cpuimage *i) {
         // TODO: check glGetError
     }
 
-    gl->gl_time = SDL_GetTicks() - start;
+    gl->gl_time = current_timestamp() - start;
 
     return gl;
 }

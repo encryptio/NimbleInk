@@ -8,8 +8,7 @@
 
 #include "archive.h"
 #include "filetype.h"
-
-#include <SDL.h>
+#include "timing.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +56,7 @@ struct cpuimage * cpuimage_from_disk(char *path) {
 }
 
 struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
-    uint32_t start = SDL_GetTicks();
+    double start = current_timestamp();
 
     struct cpuimage *i;
     if ( (i = calloc(1, sizeof(struct cpuimage))) == NULL )
@@ -88,7 +87,7 @@ struct cpuimage * cpuimage_from_ram(void *ptr, int len) {
         ret = cpuimage_load_from_ram_sdl_image(ptr, len, i);
 #endif
 
-    i->cpu_time = SDL_GetTicks() - start;
+    i->cpu_time = current_timestamp() - start;
 
     snprintf(i->path, MAX_PATH_LENGTH, "Address %p length %d", ptr, len);
 
