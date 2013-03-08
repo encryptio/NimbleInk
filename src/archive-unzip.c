@@ -21,8 +21,6 @@ bool archive_load_toc_zip(struct archive *ar) {
     strcpy(cmd, "unzip -l -qq ");
     str_append_quoted_as_unzip_file_literal(cmd, ar->path, 1000);
 
-    ar->files = 0;
-
     FILE *fh = popen(cmd, "r");
     if ( fh == NULL ) {
         inklog(LOG_ERR, "Couldn't popen command %s: %s", cmd, strerror(errno));
