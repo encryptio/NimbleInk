@@ -66,6 +66,7 @@ bool ft_magic_matches_type(uint8_t *data, enum ft_type type) {
                    ft_magic_matches_type(data, FT_PNM) ||
                    ft_magic_matches_type(data, FT_BMP);
     }
+    return false;
 }
 
 bool ft_path_matches_type(char *path, enum ft_type type) {
