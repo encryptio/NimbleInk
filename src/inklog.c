@@ -43,7 +43,6 @@ void inklog_real(int priority, const char *module, const char *msg, ...) {
 
     int len;
 
-#ifdef INKLOG_TIMESTAMPS
     // "[" timestamp "] "
     time_t clock = time(NULL);
     struct tm *tm = localtime(&clock);
@@ -52,7 +51,6 @@ void inklog_real(int priority, const char *module, const char *msg, ...) {
     left -= len;
     next += len;
     assert(left > 0);
-#endif
 
     // "(" level ") " module ": "
     len = snprintf(next, left, "(%s) %s: ", log_level_str(priority), module);
