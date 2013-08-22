@@ -16,6 +16,9 @@ int english_compare_natural(char *a, char *b) {
     // TODO: consider unicode.
     // TODO: consider skipping spaces and underscores
 
+    char *oa = a;
+    char *ob = b;
+
     while ( *a && *b ) {
         if ( isdigit(*a) && isdigit(*b) ) {
             // some digits, compare them numerically
@@ -43,6 +46,17 @@ int english_compare_natural(char *a, char *b) {
     if ( *b )
         return 1;
 
-    // end of both, same string
+    // end of both, equal under case-insensitivity.
+
+    // start over, case sensitive.
+    a = oa; b = ob;
+    while ( *a && *b ) {
+        if ( *a > *b )
+            return 1;
+        else if ( *a < *b )
+            return -1;
+        a++; b++;
+    }
+
     return 0;
 }
