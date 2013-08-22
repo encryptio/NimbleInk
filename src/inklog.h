@@ -4,10 +4,6 @@
 #include <syslog.h>
 #include <stdarg.h>
 
-#ifndef INKLOG_MAX_LEVEL
-#define INKLOG_MAX_LEVEL LOG_EMERG
-#endif
-
 extern int inklog_level;
 
 #define inklog(prio, args...) \

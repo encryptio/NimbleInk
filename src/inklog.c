@@ -32,7 +32,7 @@ static const char * log_level_str(int priority) {
 }
 
 void inklog_real(int priority, const char *module, const char *msg, ...) {
-    if ( priority < inklog_level ) return;
+    if ( priority > inklog_level ) return;
 
     va_list args;
     va_start(args, msg);
