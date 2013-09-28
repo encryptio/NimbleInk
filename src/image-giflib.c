@@ -30,18 +30,19 @@ static int image_giflib_read(GifFileType *gif, GifByteType *into, int want) {
 bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
     struct gif_reading_status ex = { ptr, len, 0 };
     bool ret = false;
+    int gif_error = 0;
 
-    GifFileType *gif = DGifOpen(&ex, image_giflib_read);
+    GifFileType *gif = DGifOpen(&ex, image_giflib_read, &gif_error);
 
     if ( gif == NULL ) {
-        inklog(LOG_WARNING, "Couldn't open gif, error code %d", GifLastError());
+        inklog(LOG_WARNING, "Couldn't open gif, error code %d", gif_error);
         goto RETURN;
     }
 
     // XXX: possibly a bug in giflib wrt interlaced images
     // http://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg929400.html
     if ( DGifSlurp(gif) != GIF_OK ) {
-        inklog(LOG_WARNING, "Couldn't slurp the gif file, error code %d", GifLastError());
+        inklog(LOG_WARNING, "Couldn't slurp the gif file, error code %d", gif_error);
         goto DESTROY;
     }
 
