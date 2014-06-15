@@ -35,7 +35,7 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
     GifFileType *gif = DGifOpen(&ex, image_giflib_read, &gif_error);
 
     if ( gif == NULL ) {
-        inklog(LOG_WARNING, "Couldn't open gif, error code %d", gif_error);
+        inklog(LOG_WARNING, "Couldn't open gif: %s", GifErrorString(gif_error));
         goto RETURN;
     }
 
@@ -89,8 +89,8 @@ bool cpuimage_load_from_ram_giflib(void *ptr, int len, struct cpuimage *i) {
     ret = true;
 
 DESTROY:
-    if ( DGifCloseFile(gif) != GIF_OK )
-        inklog(LOG_CRIT, "Couldn't DGifCloseFile(%p)", gif);
+    if ( DGifCloseFile(gif, &gif_error) != GIF_OK )
+        inklog(LOG_CRIT, "Couldn't DGifCloseFile(%p): %s", gif, GifErrorString(gif_error));
 
 RETURN:
 
